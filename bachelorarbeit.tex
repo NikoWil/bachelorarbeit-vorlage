@@ -110,6 +110,8 @@
 \def\algorithmautorefname{Algorithmus}
 \let\chapter=\section % repariert ein Problem mit algorithm2e
 
+\DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
+
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -129,13 +131,13 @@
     Bachelorarbeit
     \vspace*{2cm}
 
-    {\bf\huge Titel der Bachelorarbeit \\ und wenn er länger ist. \par}
+    {\bf\huge Malleable TOHTN Planning \\using CrowdHTN and Mallob \par}
     % Siehe auch oben die Felder pdftitle={}
     % mit \par am Ende stimmt der Zeilenabstand
 
     \vfill
 
-    Name des Autors
+    Niko Wilhelm
 
     \vspace*{15mm}
 
@@ -145,7 +147,7 @@
 
     \begin{tabular}{rl}
       Betreuer: & Prof. Dr. Peter Sanders \\
-      & Dipl. Inform. Zweiter Betreuer \\
+      & M.Sc. Dominik Schreiber \\
     \end{tabular}
     
     \vspace*{10mm}
@@ -175,7 +177,7 @@ Hiermit versichere ich, dass ich diese Arbeit selbständig verfasst und keine an
 \bigskip
 
 \noindent
-Ort, den Datum
+Karlsruhe, den \today
 
 % Unterschrift (handgeschrieben)
 
@@ -223,7 +225,7 @@ I'm blind text. From birth. It took a long time until I realized what it means t
 
 \section*{Danksagungen}
 
-Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo.
+Thanks to i10pc135 which suffered much to make the experimental evaluation possible.
 
 \vfill\vfill\vfill
 \clearpage
@@ -250,181 +252,87 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Einleitung}
+\section{Introduction}
 
-\subsection{Motivation}
+\subsection{TOHTN Formalism}
 
-Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte. Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen. Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben. Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren. Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse.
+\subsection{Malleable Algorithms}
 
-Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy. Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren. Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch.
-\begin{enumerate}
-\item Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte.
-\item Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans.
-\item
-Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen.
-\end{enumerate}
-Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben. Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren. Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy. Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren.
+\section{Improvements to CrowdHTN}
+\subsection{Preceding Plan}
+In the initial implementation each node stored the full preceding plan as a sequence of all reductions that were applied so far. This leads to roughly quadratic overhead (sum over 1..n, only roughly as not each step increases the length. Wait, is it roughly, then? Probably, as the fraction of steps that increment the preceding plan should be kinda constant)
+This duplication was not needed. The newer implementation instead stores an optional<reduction> in each node. I.e., the preceding reduction is stored if one exists, nothing if there isn't one. When the preceding plan is needed, either for communication or to extract a plan, the current search path is iterated and all reductions are accumulated.
 
-\subsection{Beiträge der Bachelorarbeit}
+\subsection{Lazy Instantiation of Child Nodes}
+lazy instantiation works on the basis of finding all free variables of a method and creating Reductions based on all possible combinations
 
-Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch. Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte. Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen. Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben. Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren.
+Initial implementation: instantiate all possible reductions, filter out any with not fulfilled preconditions,then shuffle them
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Problems: this spends both time and memory instantiating reductions that might never be needed for the rest of the search
+We effectively save not only the current path, but also follow all possible branches to a distance of 1
 
-\section{Bekannte Algorithmen}
+Solution: lazily create reductions as needed
+How to do this (first way):
+adapt the argiterator from Lilotane into the CrowdHTN code base. Adapt it to only substitute the arguments that are not already determined by the corresponding task (arguments)
 
-Es packte seine sieben Versalien \cite{Cormen2001introduction}, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy.
-\begin{Definition}
-Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren.
-\end{Definition}
-Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch. Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte.
+To achieve randomization:
+each domain is iterated to create the substitutions
+Each time we build such an iterator, we randomize the order within the domains for this specific iterator
+This will lead to different orders
 
-\subsection{Enumeration aller Möglichkeiten}
+Further ideas:
+each time domains 1..k have been fully iterated, increment k+1 by 1, then shuffle the order of domains 1..k
 
-\begin{algorithm}
-  \caption{Tiefensuche -- depth-first search}\label{alg:Tiefensuche}
-  \SetKwFunction{DFS}{DFS}
+For n total domains, each time domains 1..n-1 have been iterated, remove the current value from domain n, then shuffle all domain orders
 
-  \KwIn{Ein Graph $G = (V,E)$}
+Compare the runtimes of eager and lazy instantiation, check at which point it is worth it to incur the (potential) additional overhead of lazy instantiation
+Compare on multiple domains?
+Check different metrics for comparison (size of domains, number of parameters, number of potential children (product of sizes))
 
-  \While(\tcp*[f]{Lösche Knotennummer $\nu[v]$, Vorgänger $\pi[v]$}){$v \in V$}{
-    $\nu[v] \leftarrow nil$, $\pi[v] \leftarrow nil$, $C[v] \leftarrow nil$ \tcp*{und Komponente $C[v]$.}
-  }
-  $\nu \leftarrow 0$, $C \leftarrow 0$ \tcp*{Initiale Knoten- und Komponentennummern.}
+Potential problems:
+We need quite a bit of state (domains, current index into each domain) to perform lazy instantiation
+The order is not truly random. We iterate some domains faster/ more often than others. What if the important change is in a domain which is iterated slowly? More random order makes this easier
 
-  \DFS{$v$}
-  \Begin{
-    $\nu[v] \leftarrow \nu$, $\nu \leftarrow \nu+1$, $C[v] \leftarrow C$ \tcp*{Nummeriere Knoten.}
-    \ForEach{$w \in \operatorname{Adj}(v) \KwSty{ mit } \nu[w] = nil$}{
-      $\pi[w] \leftarrow v$, \DFS{$w$} \tcp*{Rekursion auf unnummerierte Nachbarn.}
-    }
-  }
+A potential solution: space filling curves
+Advantages: little state (can just be incremented), iterates all dimensions equally
+Disadvantage: fixed order. With shuffling within each domain might be random again
 
-  \ForEach{$r \in V$}{
-    \lIf(\tcp*{Beginne bei Wurzelknoten $r$.}){$\nu[r] = nil$}{
-      \DFS{$r$}, $C \leftarrow C+1$
-    }
-  }
+Space filling curves come with the restriction of being strictly continuous
+We do not need this property. All we are interested in is an easy to compute fixed order in which the whole space is iterated where each permutation is hit exactly once
+We want only self-avoiding curves, to not hit any instantiation twice (could loop detection just fix that? But it would be a bad fix)
 
-  \KwOut{$(V,\{ \{v,\pi[v]\} \mid v \in V ,\, \pi[v] \neq nil \})$ ist ein $G$ aufspannender Wald und $\{ \{ v \mid v \in V \text{ und } C[v] = C \} \mid C \in \mathbb{N}_0 \}$ sind die Komponenten von $G$.}
+\subsection{Using Domain Meta-Information}
+inspiration taken from HyperTensioN
 
-\end{algorithm}
+taking preconditions of tasks and lifting them up into methods
+Only do this if the precondition is guaranteed to also apply to the method (cannot be achieved before the respective task?)
+This allows us to stop exploring paths earlier
 
-Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen (siehe \autoref{alg:Tiefensuche}). Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben. Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik.
+\subsection{Global and Memory Efficient Loop Detection}
+So far: each worker has a hash set of each node ever encountered (note: we define node equality through the sequence of open tasks and the set of predicates that is the world state. Depth in the graph and preceding plan are ignored)
+Advantages: allows for perfect local loop detection, as we can always fall back to equality checks in case of hash collisions.
+Problems: This approach leads to a massive memory overhead, as the world state is duplicated countless times. This also leads to increased run times just to manage the growing hash set.
+This is also not suited for global loop detection. Global loop detection would need some mechanism to communicate seen nodes. Nodes are too large to communicate all of them, though. If we only communicate some nodes instead of all we run the risk of a node "going past" that barrier of known nodes and still exploring the swathes of known nodes beyond the "barrier"
+TODO: what about open tasks (memory consumption)? Or was that an ImmutableStack with little overhead?
 
-\subsection{Formulierung als lineares Programm}
+Idea: drop the precondition of perfect loop detection with no false positives.
+For loop detection use a bloom filter with a set of hash functions for search nodes.
+This comes with a fixed, configurable memory overhead per worker. As a result, overall memory consumption should
+- drop
+- be more predictable
+To communicate nodes we can just communicate the bit array that makes up our filter and combine them via bitwise OR. This ensures that communication volume is also fixed. It is independent of both size of nodes (i.e. length of open tasks sequence) and number of explored nodes (since last round of communication).
+In addition to communicating the bloom filter we communicate the number of newly added nodes. Then each worker knows an upper bound for the total number of nodes that are part of it's bloom filter (might be an overestimation if two workers insert identical nodes as the node would be counted twice). As bloom filter performance/ false positives degrade with the number of elements inside it, we can restart our work depending on the number of elements in the bloom filter.
+As we communicate the number of inserted nodes, all workers are in agreement on the absolute number of inserted nodes. As a result, they can independently restart depending on this fact without further synchronization.
+Restarts are also needed to re-obtain completeness of the algorithm. As we use a random order of graph exploration we may simply restart until we get to a part hidden behind a false positive before we get to the node that blocked it from us.
+TODO: what if a node has a hash collision with one of its descendants? Impossible to obtain completeness, then!
 
-Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren. Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy:
-$$\max \{ c x \mid x \in \mathbb{R}^n \,,\; x \geq 0 \,,\; A x \leq b \} \,.$$
-Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren. Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch.
-\begin{Satz}
-Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte.
-\begin{proof}
-Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen. Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben.
-\end{proof}
-\end{Satz}
+\section{Implementation}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Integration of CrowdHTN and Mallob}
 
-\section{Implementierung}
+\section{Experimental Evaluation}
 
-Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren. Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy. Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren.
-
-Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch. Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte. Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen (siehe \autoref{fig:binäre Suchbäume}). Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben. Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren.
-
-\begin{figure}
-\hfill%
-\begin{tikzpicture}[font=\small,
-  odot/.style={draw,circle,inner sep=0pt,minimum width=18pt},
-  ]
-  \node[odot] (0) at (0, -0) {25};
-  \node[odot] (1) at (-2, -1) {10};
-  \node[odot] (2) at (2, -1) {31};
-  \node[odot] (3) at (-3, -2) {4};
-  \node[odot] (4) at (-1, -2) {21};
-  \node[odot] (5) at (1, -2) {30};
-  \node[odot] (6) at (3, -2) {32};
-  \node[odot] (7) at (-3.5, -3) {2};
-  \node[odot] (8) at (-2.5, -3) {8};
-  \node[odot] (9) at (-1.5, -3) {11};
-  \node[odot] (10) at (-0.5, -3) {24};
-  \node[odot] (11) at (0.5, -3) {28};
-  \draw (4) edge (10);
-  \draw (3) edge (8);
-  \draw (1) edge (3);
-  \draw (0) edge (2);
-  \draw (2) edge (6);
-  \draw (4) edge (9);
-  \draw (2) edge (5);
-  \draw (1) edge (4);
-  \draw (0) edge (1);
-  \draw (3) edge (7);
-  \draw (5) edge (11);
-\end{tikzpicture}
-\hfill%
-\begin{tikzpicture}[font=\small,
-  odot/.style={draw,circle,inner sep=0pt,minimum width=18pt},
-  ]
-  \node[odot] (0) at (0, -0) {21};
-  \node[odot] (1) at (-2, -1) {8};
-  \node[odot] (2) at (2, -1) {30};
-  \node[odot] (3) at (-3, -2) {4};
-  \node[odot] (4) at (-1, -2) {11};
-  \node[odot] (5) at (1, -2) {25};
-  \node[odot] (6) at (3, -2) {31};
-  \node[odot] (7) at (-3.5, -3) {2};
-  \node[odot] (8) at (-1.5, -3) {10};
-  \node[odot] (9) at (0.5, -3) {24};
-  \node[odot] (10) at (1.5, -3) {28};
-  \node[odot] (11) at (3.5, -3) {32};
-  \draw (5) edge (9);
-  \draw (0) edge (2);
-  \draw (1) edge (4);
-  \draw (5) edge (10);
-  \draw (2) edge (5);
-  \draw (6) edge (11);
-  \draw (0) edge (1);
-  \draw (4) edge (8);
-  \draw (3) edge (7);
-  \draw (1) edge (3);
-  \draw (2) edge (6);
-\end{tikzpicture}
-\hfill\null%
-
-\caption{Zwei binäre Suchbäume für $\{ 2, 4, 8, 10, 11, 21, 24, 25, 28, 30, 31, 32 \}$}\label{fig:binäre Suchbäume}
-\end{figure}
-
-Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy. Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren. Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch. Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte.
-
-Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen. Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben. Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren. Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Experimentelle Ergebnisse}
-
-\subsection{Laufzeit der Enumeration}
-
-Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren. Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch. Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte. Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen. Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben.
-
-Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren. Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy. Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren.
-
-\subsection{Laufzeit mit CPLEX}
-
-Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch. Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte. Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen. Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben. Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Schlussfolgerungen}
-
-\subsection{Ergebnisse und Bewertung}
-
-Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy. Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren. Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch. Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte.
-
-Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen. Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben. Eines Tages aber beschloß eine kleine Zeile Blindtext, ihr Name war Lorem Ipsum, hinaus zu gehen in die weite Grammatik. Der große Oxmox riet ihr davon ab, da es dort wimmele von bösen Kommata, wilden Fragezeichen und hinterhältigen Semikoli, doch das Blindtextchen ließ sich nicht beirren. Es packte seine sieben Versalien, schob sich sein Initial in den Gürtel und machte sich auf den Weg. Als es die ersten Hügel des Kursivgebirges erklommen hatte, warf es einen letzten Blick zurück auf die Skyline seiner Heimatstadt Buchstabhausen, die Headline von Alphabetdorf und die Subline seiner eigenen Straße, der Zeilengasse. Wehmütig lief ihm eine rhetorische Frage über die Wange, dann setzte es seinen Weg fort. Unterwegs traf es eine Copy.
-
-\subsection{Mögliche Erweiterungen}
-
-Die Copy warnte das Blindtextchen, da, wo sie herkäme wäre sie zigmal umgeschrieben worden und alles, was von ihrem Ursprung noch übrig wäre, sei das Wort ,,und`` und das Blindtextchen solle umkehren und wieder in sein eigenes, sicheres Land zurückkehren. Doch alles Gutzureden konnte es nicht überzeugen und so dauerte es nicht lange, bis ihm ein paar heimtückische Werbetexter auflauerten, es mit Longe und Parole betrunken machten und es dann in ihre Agentur schleppten, wo sie es für ihre Projekte wieder und wieder mißbrauchten. Und wenn es nicht umgeschrieben wurde, dann benutzen Sie es immernoch. Weit hinten, hinter den Wortbergen, fern der Länder Vokalien und Konsonantien leben die Blindtexte. Abgeschieden wohnen Sie in Buchstabhausen an der Küste des Semantik, eines großen Sprachozeans. Ein kleines Bächlein namens Duden fließt durch ihren Ort und versorgt sie mit den nötigen Regelialien. Es ist ein paradiesmatisches Land, in dem einem gebratene Satzteile in den Mund fliegen. Nicht einmal von der allmächtigen Interpunktion werden die Blindtexte beherrscht - ein geradezu unorthographisches Leben.
+\section{Future Work}
 
 \clearpage
 
