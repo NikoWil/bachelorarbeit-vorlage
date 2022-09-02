@@ -1,0 +1,58 @@
+\subsection{TOHTN Formalism}
+
+\subsubsection{Defining TOHTN Planning Problems}
+Both HTN and TOHTN planning are based on the idea of decomposing a list of initial tasks down into smaller subtasks until those subtasks can be achieved by simple actions.
+
+\todo{quote more formalisms}
+Multiple definitions for HTN planning exist. In this work we build on the definition introduced in \cite{georgievski2015htn}.
+
+\begin{definition} % predicate
+	A \textbf{predicate} consists of two parts. Firstly a predicate symbol $p \in \mathcal{P}$ where $\mathcal{P}$ is the finite set of predicate symbols. Secondly of a list of terms $\tau_1, \ldots, \tau_k$ where each term $\tau_i$ is either a constant symbol $c \in \mathcal{C}$, with $\mathcal{C}$ being the finite set of constant symbols, or a variable symbol $v \in \mathcal{V}$, where $\mathcal{V}$ is the infinite set of variable symbols. \\
+	The set of all predicates is called $\mathcal{Q}$.
+\end{definition}
+With the definition of a predicate in place, we can then define a grounding as well as our world state.
+\begin{definition} % grounding
+	A \textbf{ground predicate} is a predicate where the terms contain no variable symbols or, in other words, a predicate that contains only constant symbols.
+\end{definition}
+\begin{definition} % state
+	A \textbf{state} $s \in 2^{\mathcal{Q}}$ is a set of ground predicates for which we make the closed-world-assumption. Under the closed-world-assumption, only positive predicates are explicitly represented in $s$. All predicates not in $s$ are implicitly negative.
+\end{definition}
+
+
+\begin{definition} % primitive task/ action
+	With $T_p$ the set of primitive task symbols, a \textbf{primitive task} $t_p$ is defined as a triple $t_p(\Tilde{t}_p (a_1, \ldots, a_k), pre(t_p), eff(t_p))$. $\Tilde{p} \in T_p$ is the task symbol, $a_1, \ldots, a_k \in \mathcal{C} \cup \mathcal{V}$ are the task arguments, $pre(t_p) \in 2^{\mathcal{P}}$ the preconditions and $eff(t_p) \in 2^{\mathcal{P}}$ the effects of the primitive task $t_p$. We further define the positive and negative preconditions of $t_p$ as $pre^+(t_p) := \{p \in pre(t_p) : p \text{ is positive}\}$ and $pre^-(t_p) := \{p \in pre(t_p) : p \text{ is negative}\}$. We define $eff^+(t_p)$ and $eff^-(t_p)$ analogously. \\
+	We call a fully ground primitive task an \textbf{action}.
+\end{definition}
+
+As preconditions and effects may not be concerned with the whole world state the closed-world assumption does not apply to them. To any HTN instance we could create an equivalent one where each precondition and effect cares about the whole world state. This would be achieved by instantiating all the "don't care" terms in preconditions and effects with all possible combinations of predicates. Doing this would, however, come at the price of a huge blowup of our planning problem. \\
+
+\begin{definition} % applicable, application
+	An action $t_p$ is \textbf{applicable}
+	- $pre^+$ is fully contained in the state $s$
+	- none of $pre^-$ are contained in $s$
+	- the \textbf{application} of a task gives us a new state $s' = (s \setminus eff^-(t_p)) \cup eff^+(t_p)$
+\end{definition}
+
+\begin{definition} % compound task/ abstract task
+	We define a \textbf{compound task} as $t_c = \Tilde{t}_c(a_1, \ldots, a_k)$, where $\Tilde{t_c} \in T_c$ is the task symbol from the finite set of compound task symbols $T_c$ and $a_1, \ldots, a_k$ are the task arguments.
+\end{definition}
+Primitive and compound tasks together form task networks. In places where both can be used, we will refer to them simply as tasks $t \in T$.
+
+\begin{definition} % task network
+	Let $T = T_p \bigcup T_c$ be a set of primitive and compound tasks. A task network is a tuple $\tau = (T, \psi)$ consisting of tasks $T$ and constraints $\psi$ between those tasks.
+\end{definition}
+
+\begin{definition} % method, reduction
+	Let $M$ be a finite set of method symbols and $T = T_p \bigcup T_c$ a set of primitive and compound tasks. A \textbf{method} $m = (\Tilde{m}(a_1, \ldots, a_k), t_c, pre(m), subtasks(m), constraints(m))$ is a tuple consisting of the method symbol $\Tilde{m}$, the method arguments $a_1, \ldots, a_k$, the associated compound task $t_c \in T_c$ the method refers to, a set of preconditions $pre(m) \in 2^{\mathcal{P}}$, a set of tasks $subtasks(m) = \{t_1, \ldots, t_l\}, t_i \in T$ and a set of constraints $c_1, \ldots, c_m$ defining relationships between the tasks in $subtasks(m)$. Any arguments appearing in $t_c, pre(m), subtasks(m)$ must also appear in $a_1, \ldots, a_k$.\\
+	In TOHTN planning, $constraints(m)$ is implicitly set s.t. the subtasks $t_1, \ldots, t_l$ are totally ordered. \\
+	We call a fully ground method a \textbf{reduction}.
+\end{definition}
+\todo{link directly to resolution of a task network if resolving is defined before method!}
+Each method $m$ has exactly one associated compound task $t_c$. However, multiple methods $m_1, \ldots, m_k$ may be associated with a single compound task $t_c$. Additionally, while any arguments of $t_c$ must be present in $m$, the contrary is not true and $m$ may have arguments not present in $t_c$, i.e., $m$ is not fully determined by $t_c$. As a result methods present choice points both in the choice of method itself as well as through the argument instantiation. \\
+
+
+\begin{definition}
+	Test
+\end{definition}
+
+\

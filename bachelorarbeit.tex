@@ -3,7 +3,8 @@
 % Dies ist nur eine Vorlage. Strikte Vorgaben wie die Bachelorarbeit auszusehen
 % hat gibt es nicht. Darum können auch alle Teile angepasst werden.
 
-\documentclass[12pt,a4paper,twoside]{scrartcl}
+% TODO: change away from the enabledeprecatedfontcommands
+\documentclass[enabledeprecatedfontcommands,12pt,a4paper,twoside]{scrartcl}
 
 % Diese (und weitere) Eingabedateien sind in UTF-8
 \usepackage[utf8]{inputenc}
@@ -111,6 +112,10 @@
 \let\chapter=\section % repariert ein Problem mit algorithm2e
 
 \DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
+
+\usepackage{todonotes}
+
+\newtheorem{definition}{Definition}
 
 \begin{document}
 
@@ -253,82 +258,42 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Introduction}
+\subsection{Motivation}
+\subsection{Research Goal}
+- Provide a performant parallel TOHTN planner by improving upon the Crowd planner
+- Provide integration of TOHTN into the Mallob malleable load balancer
+- Compare performance of parallel to malleable TOHTN planning
+- 
+\subsection{Thesis Overview}
 
-\subsection{TOHTN Formalism}
+\section{Theoretical Foundations}
+
+\include{tohtn_formalism}
 
 \subsection{Malleable Algorithms}
 
-\section{Improvements to CrowdHTN}
-\subsection{Preceding Plan}
-In the initial implementation each node stored the full preceding plan as a sequence of all reductions that were applied so far. This leads to roughly quadratic overhead (sum over 1..n, only roughly as not each step increases the length. Wait, is it roughly, then? Probably, as the fraction of steps that increment the preceding plan should be kinda constant)
-This duplication was not needed. The newer implementation instead stores an optional<reduction> in each node. I.e., the preceding reduction is stored if one exists, nothing if there isn't one. When the preceding plan is needed, either for communication or to extract a plan, the current search path is iterated and all reductions are accumulated.
-
-\subsection{Lazy Instantiation of Child Nodes}
-lazy instantiation works on the basis of finding all free variables of a method and creating Reductions based on all possible combinations
-
-Initial implementation: instantiate all possible reductions, filter out any with not fulfilled preconditions,then shuffle them
-
-Problems: this spends both time and memory instantiating reductions that might never be needed for the rest of the search
-We effectively save not only the current path, but also follow all possible branches to a distance of 1
-
-Solution: lazily create reductions as needed
-How to do this (first way):
-adapt the argiterator from Lilotane into the CrowdHTN code base. Adapt it to only substitute the arguments that are not already determined by the corresponding task (arguments)
-
-To achieve randomization:
-each domain is iterated to create the substitutions
-Each time we build such an iterator, we randomize the order within the domains for this specific iterator
-This will lead to different orders
-
-Further ideas:
-each time domains 1..k have been fully iterated, increment k+1 by 1, then shuffle the order of domains 1..k
-
-For n total domains, each time domains 1..n-1 have been iterated, remove the current value from domain n, then shuffle all domain orders
-
-Compare the runtimes of eager and lazy instantiation, check at which point it is worth it to incur the (potential) additional overhead of lazy instantiation
-Compare on multiple domains?
-Check different metrics for comparison (size of domains, number of parameters, number of potential children (product of sizes))
-
-Potential problems:
-We need quite a bit of state (domains, current index into each domain) to perform lazy instantiation
-The order is not truly random. We iterate some domains faster/ more often than others. What if the important change is in a domain which is iterated slowly? More random order makes this easier
-
-A potential solution: space filling curves
-Advantages: little state (can just be incremented), iterates all dimensions equally
-Disadvantage: fixed order. With shuffling within each domain might be random again
-
-Space filling curves come with the restriction of being strictly continuous
-We do not need this property. All we are interested in is an easy to compute fixed order in which the whole space is iterated where each permutation is hit exactly once
-We want only self-avoiding curves, to not hit any instantiation twice (could loop detection just fix that? But it would be a bad fix)
-
-\subsection{Using Domain Meta-Information}
-inspiration taken from HyperTensioN
-
-taking preconditions of tasks and lifting them up into methods
-Only do this if the precondition is guaranteed to also apply to the method (cannot be achieved before the respective task?)
-This allows us to stop exploring paths earlier
-
-\subsection{Global and Memory Efficient Loop Detection}
-So far: each worker has a hash set of each node ever encountered (note: we define node equality through the sequence of open tasks and the set of predicates that is the world state. Depth in the graph and preceding plan are ignored)
-Advantages: allows for perfect local loop detection, as we can always fall back to equality checks in case of hash collisions.
-Problems: This approach leads to a massive memory overhead, as the world state is duplicated countless times. This also leads to increased run times just to manage the growing hash set.
-This is also not suited for global loop detection. Global loop detection would need some mechanism to communicate seen nodes. Nodes are too large to communicate all of them, though. If we only communicate some nodes instead of all we run the risk of a node "going past" that barrier of known nodes and still exploring the swathes of known nodes beyond the "barrier"
-TODO: what about open tasks (memory consumption)? Or was that an ImmutableStack with little overhead?
-
-Idea: drop the precondition of perfect loop detection with no false positives.
-For loop detection use a bloom filter with a set of hash functions for search nodes.
-This comes with a fixed, configurable memory overhead per worker. As a result, overall memory consumption should
-- drop
-- be more predictable
-To communicate nodes we can just communicate the bit array that makes up our filter and combine them via bitwise OR. This ensures that communication volume is also fixed. It is independent of both size of nodes (i.e. length of open tasks sequence) and number of explored nodes (since last round of communication).
-In addition to communicating the bloom filter we communicate the number of newly added nodes. Then each worker knows an upper bound for the total number of nodes that are part of it's bloom filter (might be an overestimation if two workers insert identical nodes as the node would be counted twice). As bloom filter performance/ false positives degrade with the number of elements inside it, we can restart our work depending on the number of elements in the bloom filter.
-As we communicate the number of inserted nodes, all workers are in agreement on the absolute number of inserted nodes. As a result, they can independently restart depending on this fact without further synchronization.
-Restarts are also needed to re-obtain completeness of the algorithm. As we use a random order of graph exploration we may simply restart until we get to a part hidden behind a false positive before we get to the node that blocked it from us.
-TODO: what if a node has a hash collision with one of its descendants? Impossible to obtain completeness, then!
+\section{TOHTN Metadata}
+- researchers in TOHTN planning have collected a number of test instances for TOHTN planning
+- provide some analysis of those instances in the context of modelling TOHTN planning as graph search
+- provide a foundation to discuss the effects of changes and improvements in the crowd planning framework
 
 \section{Implementation}
 
-\subsection{Integration of CrowdHTN and Mallob}
+\include{crowd_improvements}
+
+\section{Theoretical Improvements to the Crowd Planner}
+\subsection{Search Algorithms in Crowd}
+
+\subsection{Loop Detection}
+\subsubsection{Perfect Loop Detection}
+\subsubsection{Bloom Filters}
+\subsubsection{Distributed Loop Detection}
+- ensure that 
+
+\section{Malleable TOHTN Planning}
+- ensure completeness
+- ensure performance
+- work stealing is kinda nice here
 
 \section{Experimental Evaluation}
 
