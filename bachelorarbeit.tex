@@ -114,6 +114,7 @@
 \DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
 
 \usepackage{todonotes}
+\usepackage{comment}
 
 \newtheorem{definition}{Definition}
 
@@ -268,7 +269,14 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 
 \section{Theoretical Foundations}
 
+\ref{prelim: tohtn problems}
+
 \include{tohtn_formalism}
+
+\subsection{Techniques to solve TOHTN planning problems}
+- SAT-based
+- search-based
+- lifted vs grounded
 
 \subsection{Malleable Algorithms}
 
@@ -284,16 +292,14 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 \section{Theoretical Improvements to the Crowd Planner}
 \subsection{Search Algorithms in Crowd}
 
-\subsection{Loop Detection}
-\subsubsection{Perfect Loop Detection}
-\subsubsection{Bloom Filters}
-\subsubsection{Distributed Loop Detection}
-- ensure that 
+\include{loop_detection}
 
 \section{Malleable TOHTN Planning}
 - ensure completeness
 - ensure performance
 - work stealing is kinda nice here
+
+\include{grounding_pruning}
 
 \section{Experimental Evaluation}
 

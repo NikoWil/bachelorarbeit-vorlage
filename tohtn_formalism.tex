@@ -1,6 +1,9 @@
 \subsection{TOHTN Formalism}
+In this section we first define what HTN and TOHTN problems are from a formal perspective \ref{prelim: tohtn problems}. Afterwards we take a short look at the algorithmic worst case complexity of HTN and TOHTN planning \ref{prelim: tohtn complexity}.
+
 
 \subsubsection{Defining TOHTN Planning Problems}
+\label{prelim: tohtn problems}
 Both HTN and TOHTN planning are based on the idea of decomposing a list of initial tasks down into smaller subtasks until those subtasks can be achieved by simple actions.
 
 \todo{quote more formalisms}
@@ -27,10 +30,7 @@ With the definition of a predicate in place, we can then define a grounding as w
 As preconditions and effects may not be concerned with the whole world state the closed-world assumption does not apply to them. To any HTN instance we could create an equivalent one where each precondition and effect cares about the whole world state. This would be achieved by instantiating all the "don't care" terms in preconditions and effects with all possible combinations of predicates. Doing this would, however, come at the price of a huge blowup of our planning problem. \\
 
 \begin{definition} % applicable, application
-	An action $t_p$ is \textbf{applicable}
-	- $pre^+$ is fully contained in the state $s$
-	- none of $pre^-$ are contained in $s$
-	- the \textbf{application} of a task gives us a new state $s' = (s \setminus eff^-(t_p)) \cup eff^+(t_p)$
+	An action $t_p$ is \textbf{applicable} in state $s$ if $pre^+(t_p) \subseteq s$ and $pre^-(t_p) \cap s = \emptyset$. The \textbf{application} of $t_p$ in state $s$ results in the new state $s' = (s \setminus eff^-(t_p)) \cup eff^+(t_p)$.
 \end{definition}
 
 \begin{definition} % compound task/ abstract task
@@ -43,7 +43,7 @@ Primitive and compound tasks together form task networks. In places where both c
 \end{definition}
 
 \begin{definition} % method, reduction
-	Let $M$ be a finite set of method symbols and $T = T_p \bigcup T_c$ a set of primitive and compound tasks. A \textbf{method} $m = (\Tilde{m}(a_1, \ldots, a_k), t_c, pre(m), subtasks(m), constraints(m))$ is a tuple consisting of the method symbol $\Tilde{m}$, the method arguments $a_1, \ldots, a_k$, the associated compound task $t_c \in T_c$ the method refers to, a set of preconditions $pre(m) \in 2^{\mathcal{P}}$, a set of tasks $subtasks(m) = \{t_1, \ldots, t_l\}, t_i \in T$ and a set of constraints $c_1, \ldots, c_m$ defining relationships between the tasks in $subtasks(m)$. Any arguments appearing in $t_c, pre(m), subtasks(m)$ must also appear in $a_1, \ldots, a_k$.\\
+	Let $M$ be a finite set of method symbols and $T = T_p \bigcup T_c$ a set of primitive and compound tasks. A \textbf{method} $m = (\Tilde{m}(a_1, \ldots, a_k), t_c, pre(m), subtasks(m), constraints(m))$ is a tuple consisting of the method symbol $\Tilde{m}$, the method arguments $a_1, \ldots, a_k$, the associated compound task $t_c \in T_c$ the method refers to, a set of preconditions $pre(m) \in 2^{\mathcal{P}}$, a set of tasks $subtasks(m) = \{t_1, \ldots, t_l\}, t_i \in T$ and a set of ordering constraints $c_1, \ldots, c_m$ defining relationships between the subtasks. Any arguments appearing in $t_c, pre(m), subtasks(m)$ must also appear in $a_1, \ldots, a_k$.\\
 	In TOHTN planning, $constraints(m)$ is implicitly set s.t. the subtasks $t_1, \ldots, t_l$ are totally ordered. \\
 	We call a fully ground method a \textbf{reduction}.
 \end{definition}
@@ -51,8 +51,59 @@ Primitive and compound tasks together form task networks. In places where both c
 Each method $m$ has exactly one associated compound task $t_c$. However, multiple methods $m_1, \ldots, m_k$ may be associated with a single compound task $t_c$. Additionally, while any arguments of $t_c$ must be present in $m$, the contrary is not true and $m$ may have arguments not present in $t_c$, i.e., $m$ is not fully determined by $t_c$. As a result methods present choice points both in the choice of method itself as well as through the argument instantiation. \\
 
 
-\begin{definition}
-	Test
+\begin{definition} % resolving a compound task
+	Let $\tau = (T, \psi)$ be a task network, $s$ a state, $m = (\Tilde(m)(a_1, \ldots, a_k), t_c, pre(m), subtasks(m), constraints(m))$ be a method. $m$ \textbf{resolves} $\tau$ iff $t_c \in T$, the constraints in $\psi$ allow for $t_c$ to be resolved, $pre^+(m) \in s$ and $pre^-(m) \cap s = \emptyset$. \\
+	Resolving a compound task $t \in T$ results in a new task network $\tau' = ((T \setminus t) \cup \{t : t \in subtasks(m)\}, \psi \cup constraints(m))$ and state $s$. \\
+	Applying a primitive task results in a new task network $\tau' = (T \setminus t, \psi)$ in state $s'$ where the effects of $t$ have been applied to $s$. 
 \end{definition}
+\todo{extend definition: resolving a task removes it from the task network!}
 
-\
+\begin{definition} % HTN domain, HTN problem
+	An \textbf{HTN domain} is a tuple $D = (V, C, P, T, M)$ consisting of finite sets variables $V$, constants $C$, predicates $P$, tasks $T$ and methods $M$. An \textbf{HTN problem} $\Pi = (D, s_0, \tau_0)$ consists of a domain $D$, an initial state $s_0$ and an initial task network $\tau_0$. \\
+	If $subtasks(m)$ has a total order for all $m \in M$ and the tasks in $\tau_0$ are totally ordered, we speak of a \textbf{TOHTN domain} and \textbf{TOHTN problem}.
+\end{definition}
+It is possible to translate any HTN problem with initial task network $\tau_0$ into an equivalent HTN problem with initial task network $\tau'_0$ s.t. $\tau'_0$ consists of only a single task. \\
+It is possible to simplify the model s.t. $\tau_0$ always consists of only a single task with no constraints. We do this by inserting a new initial task $t_0$ and method $m_0$ with no arguments s.t. resolving $t_0$ via $m_0$ results in $\tau_0$.
+
+\subsubsection{Complexity of (TO)HTN planning}
+\label{prelim: tohtn complexity}
+The complexity of HTN and TOHTN planning has been studied in many papers. Here the problem PLANEXIST describes, whether for any given (TO)HTN instance a plan exists at all. It is not concerned with optimality. \\
+Early on it was shown by \cite{erol1994htn} and \cite{erol1996complexity} that the complexity of hierarchical planning formalisms depends on things such as the existence and ordering of non-primitive tasks, whether a total order between tasks is imposed and whether variables are allowed. The combination of arbitrary non-primitive tasks, no total order imposed and allowing variables is what we talk about with HTN planning, the same combination but with a total order is what we mean with TOHTN planning. They showed that HTN planning is semi-decidable whereas TOHTN planning is decidable in D-EXPTIME while being PSPACE-hard. \\
+Regarding the general relationship of hierarchical planning to complexity theory, \cite{erol1994htn} and \cite{erol1996complexity} showed early on that HTN instances can be used to simulate context-free languages. This was extended by \cite{holler2014language} who showed that TOHTN instances correspond exactly to context-free grammars. \\
+In addition to planning itself, the problem of plan verification was studied. Here, \cite{behnke2015complexity} showed that plan verification is NP-complete, even under the assumption that not only the plan but also the decompositions leading to it are provided.
+
+\todo{Provide a citation for the max. depth of a task network until a plan is found or does not exist}
+
+\begin{comment}
+\cite{erol1994htn}
+- complexity depends on
+	1. existence/ ordering of non-primitive tasks in task networks
+	2. total order (or not) of tasks
+	3. whether variables are allowed
+- general HTN planning (non-primitive tasks are allowed, no guaranteed total order, variables are allowed) -> undecidable
+- TOHTN planning (variables allowed, arbitrary non-primitive tasks) -> D-EXPTIME, EXPSPACE-hard
+ 
+- context free grammars play a role, can be simulated in HTN
+
+\cite{erol1996complexity}
+- undecidable for HTN, D-EXPTIME and PSPACE-hard for TOHTN
+
+both: context-free grammars can be simulated by HTN, use primitive tasks as terminals, abstract tasks as non-terminals, methods as grammar rules
+
+\cite{holler2014language}
+- TOHTN planning problems correspond to context free grammars
+
+\cite{behnke2015complexity}
+- HTN plan verification is NP-complete
+- this even holds if the list of decompositions is provided
+\end{comment}
+
+\todo{find a place to cite this info! Is contained in Gregor Behnke's thesis}
+- the depth of our task network (until a plan is found) can be exponential in the input size
+- plan length is up to exponential in depth
+
+\subsubsection{Differences from other Kinds of Planning}
+\cite{nau2007current} creates a classification of planners into domain-specific, domain-independent and domain-configurable planners.
+They argue that HTN planning falls under domain-configurable with the decompositions providing advice to the planner to gain efficiency. \\
+\cite{holler2020htn} argue that HTN-planning is not simply a domain-configurable version of classical planning and argue on the basis that \cite{erol1994htn, erol1996complexity} showed that HTN-planning is strictly more powerful compared to classical planning which is PSPACE-complete. \\
+While we agree with \cite{holler2020htn}, one can still use HTN planning without using the full complexity of the model, using it instead to provide more efficient and guided versions of classical planning problems.
