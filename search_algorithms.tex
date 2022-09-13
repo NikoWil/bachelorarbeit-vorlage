@@ -1,0 +1,47 @@
+\section{Search Algorithms Used in CrowdHTN}
+
+\subsection{Random DFS}
+
+\subsection{Random BFS}
+- trivially complete, will always encounter everything
+- reference statistics (branching factor from Crowd, minimal plan depth from Lilotane) to show that 
+
+\subsection{GBFS}
+- inspired by PandaGBFS
+- GBFS:
+	- use a heuristic to grade each node
+	- next node: best of all neighbors of the current node
+	- then do a DFS on this
+- GBFS is not complete
+- might get stuck in an infinite loop
+\todo{Quote to describe GBFS?}
+
+The heuristic:
+- determine the minimum number of actions/ reductions needed to solve the task network
+- ignore any and all parameters and world state to simplify the computation
+\todo{ensure the code actually does this!}
+- iterative approach:
+	- initial:
+		- actions have remaining depth 0
+		- reductions without children/ where all children are noops have depth 1
+	- iterating:
+		- reductions: the sum of the minimum depths of all subtasks + 1
+		- tasks: the minimum over all reductions
+- i.e., we heuristically try to find nodes with the minimum amount of work remaining
+
+\begin{algorithm}
+	\caption{GBFS heuristic calculation}
+	task depths $\gets \{(t_c, 0) | \text{t_c is concrete task}\}$\;
+	\While{task depths changed}{
+		
+	}
+\end{algorithm}
+
+
+\subsection{A-Star}
+- same heuristic as GBFS
+- also track the number of applied reductions so far
+- gives us completeness (even without loop detection!) as the length of the path so far gives us a kind of BFS characteristic to the whole thing
+- for each node we know exactly that any path
+- we modify A* to terminate as soon as we find a goal for the first time
+- could turn into an anytime algorithm by keeping up the search until optimal plan
