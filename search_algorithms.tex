@@ -28,12 +28,29 @@ The heuristic:
 		- reductions: the sum of the minimum depths of all subtasks + 1
 		- tasks: the minimum over all reductions
 - i.e., we heuristically try to find nodes with the minimum amount of work remaining
+- each iteration gives us the remaining depth of at least 1 compound task, else we terminate
+- i.e., efficient to compute
+- tasks that do not receive a value are unresolvable and can be pruned
 
 \begin{algorithm}
 	\caption{GBFS heuristic calculation}
-	task depths $\gets \{(t_c, 0) | \text{t_c is concrete task}\}$\;
+	task depths $\gets \{(t_c, 0) | t_c \in \text{ concrete tasks}\}$\;
+	remaining tasks $\gets \{t_c | t_c \in \text{ compound tasks}\}$\;
 	\While{task depths changed}{
-		
+		% get reduction depths
+		\For{$t_c \in$ compound tasks}{
+			reduction depths $= \emptyset$\;
+			\For{$r \in$ reductions for $t_c$}{
+				\If{depths of all subtasks are known}{
+					reduction depths $\cup= \{ \max \{d | d \text{ is depth of a subtask of } r \} \}$\;
+				}
+			}
+			
+			\If{reduction depths $\neq \emptyset$}{
+				task depths $\cup= \{ (t_c, \min \text{ reduction depths }) \}$\;
+				remaining tasks $= \setminus \{ t_c \}$
+			}
+		}
 	}
 \end{algorithm}
 
