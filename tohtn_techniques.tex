@@ -1,0 +1,46 @@
+\subsection{Techniques to solve TOHTN planning problems}
+
+\subsection{SAT-based}
+- SAT-based
+- often with a BFS-like characteristic (Tree-Rex, Lilotane, TotSat)
+
+\subsubsection{Progression Search}
+\cite{holler2020htn}
+	- progression search is one of the best known search algorithms
+	- generate plans in a forward way
+	- always resolve a task that has no more open predecessors with the ordering constraints
+		- own: for TOHTN: we always have exactly 1 task we want to process next!
+	- progression search planners always know the current (world) state, can use this information for heuristics, pruning etc
+	
+	- other planners search partial plans but not in order, they thus cannot know the current world state
+	
+\begin{algorithm}
+	\caption{Classical Progression Search as introduced in \cite{holler2020htn}}
+	$fringe \gets \{ (s_0, tn_I, \epsilon)\}$\;
+	\While{$fringe \neq \emptyset$}{
+		$n \gets fringe.pop()$\;
+		\If{$n.isgoal$}{
+			\textbf{return} $n$\;
+		}
+		$U \gets n.unconstrainedNodes$\;
+		\For{$t \in U$}{
+			\eIf{$isPrimitive(t)$}{
+				\If{$isApplicable(t)$}{
+					$n' \gets n.apply(t)$\;
+					$fringe.add(n')$\;
+				}
+			}{
+				\For{$m \in t.methods$}{
+					$n' \gets n.decompose(t, m)$\;
+					$fringe.add(n')$\;
+				}
+			}
+		}
+	}
+\end{algorithm}
+
+- search-based
+- lifted vs grounded
+	- Lilotane, HyperTensioN
+	- Panda, CrowdHTN, Tree-Rex
+	- lifted: more general, less pruning?

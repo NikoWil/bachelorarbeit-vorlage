@@ -268,18 +268,22 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 - 
 \subsection{Thesis Overview}
 
-\section{Theoretical Foundations}
+\section{Preliminaries}
 
 \ref{prelim: tohtn problems}
 
-\include{tohtn_formalism}
+\subsection{Planner Properties}
+- completeness: we always find a plan if it exists
+- correctness: kinda obvious
+- systematicity (\cite{holler2020htn}): for search we explore each search node at most once
+- optimality: shortest plan (few planners, Lilotane maybe?)
 
-\subsection{Techniques to solve TOHTN planning problems}
-- SAT-based
-- search-based
-- lifted vs grounded
+\include{tohtn_formalism}
+\include{tohtn_techniques}
 
 \subsection{Malleable Algorithms}
+
+\include{how_crowd_works}
 
 \section{TOHTN Metadata}
 - researchers in TOHTN planning have collected a number of test instances for TOHTN planning
@@ -295,10 +299,7 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 
 \include{loop_detection}
 
-\section{Malleable TOHTN Planning}
-- ensure completeness
-- ensure performance
-- work stealing is kinda nice here
+\include{malleable_tohtn}
 
 \include{grounding_pruning}
 

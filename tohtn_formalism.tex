@@ -1,7 +1,6 @@
 \subsection{TOHTN Formalism}
 In this section we first define what HTN and TOHTN problems are from a formal perspective \ref{prelim: tohtn problems}. Afterwards we take a short look at the algorithmic worst case complexity of HTN and TOHTN planning \ref{prelim: tohtn complexity}.
 
-
 \subsubsection{Defining TOHTN Planning Problems}
 \label{prelim: tohtn problems}
 Both HTN and TOHTN planning are based on the idea of decomposing a list of initial tasks down into smaller subtasks until those subtasks can be achieved by simple actions.
@@ -68,7 +67,7 @@ It is possible to simplify the model s.t. $\tau_0$ always consists of only a sin
 \subsubsection{Complexity of (TO)HTN planning}
 \label{prelim: tohtn complexity}
 The complexity of HTN and TOHTN planning has been studied in many papers. Here the problem PLANEXIST describes, whether for any given (TO)HTN instance a plan exists at all. It is not concerned with optimality. \\
-Early on it was shown by \cite{erol1994htn} and \cite{erol1996complexity} that the complexity of hierarchical planning formalisms depends on things such as the existence and ordering of non-primitive tasks, whether a total order between tasks is imposed and whether variables are allowed. The combination of arbitrary non-primitive tasks, no total order imposed and allowing variables is what we talk about with HTN planning, the same combination but with a total order is what we mean with TOHTN planning. They showed that HTN planning is semi-decidable whereas TOHTN planning is decidable in D-EXPTIME while being PSPACE-hard. \\
+Early on it was shown by \cite{erol1994htn} and \cite{erol1996complexity} that the complexity of hierarchical planning formalisms depends on things such as the existence and ordering of non-primitive tasks, whether a total order between tasks is imposed and whether variables are allowed. The combination of arbitrary non-primitive tasks, no total order imposed and allowing variables is what we talk about with HTN planning, the same combination but with a total order is what we mean with TOHTN planning. They showed that HTN planning is semi-decidable whereas TOHTN planning is decidable in D-EXPTIME while being EXPSPACE-hard. \\
 Regarding the general relationship of hierarchical planning to complexity theory, \cite{erol1994htn} and \cite{erol1996complexity} showed early on that HTN instances can be used to simulate context-free languages. This was extended by \cite{holler2014language} who showed that TOHTN instances correspond exactly to context-free grammars. \\
 In addition to planning itself, the problem of plan verification was studied. Here, \cite{behnke2015complexity} showed that plan verification is NP-complete, even under the assumption that not only the plan but also the decompositions leading to it are provided.
 
@@ -101,6 +100,8 @@ both: context-free grammars can be simulated by HTN, use primitive tasks as term
 \todo{find a place to cite this info! Is contained in Gregor Behnke's thesis}
 - the depth of our task network (until a plan is found) can be exponential in the input size
 - plan length is up to exponential in depth
+
+\cite{behnke2019finding} mentions 4 ways to compute upper bounds on the task network size
 
 \subsubsection{Differences from other Kinds of Planning}
 \cite{nau2007current} creates a classification of planners into domain-specific, domain-independent and domain-configurable planners.

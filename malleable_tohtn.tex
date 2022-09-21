@@ -1,0 +1,66 @@
+\section{Malleable TOHTN Planning}
+- discuss how we can port Crowd into a malleable environment
+- start with a discussion on CrowdHTN and how it works
+- discuss how we can change CrowdHTN to work in a malleable environment
+- crowd has workers
+- mallob has workers, too
+- we will call them their specific names where needed, else simply say worker
+
+\todo{Move this somewhere in the preliminaries?}
+\subsection{How Parallel CrowdHTN Works}
+The CrowdHTN planner is implemented as a parallel state machine that uses work stealing for work balancing purposes. \\
+Each local worker of CrowdHTN owns it's own queue of search nodes, tuples of \textit{open tasks} and \textit{world state} and performs progression search on these nodes as explained in \todo{cite progression search chapter}. The basic CrowdHTN parallel search algorithm is shown in algorithm \ref{crowd: parallel algo}. \\
+In the initial state, only the root worker has any search nodes. All other workers start empty. To perform load balancing, randomized work stealing is used \todo{get a citation}. The work package exchange is implemented as a three step protocol
+\begin{enumerate}
+	\item work request
+	\item response
+	\item ack (if response was positive)
+\end{enumerate}
+Upon sending a positive work response, a worker increments it's local tracker of outgoing work packages. When receiving an ack, the local tracker of outgoing work packages is decremented. This ensures that there is always at least one node that acknowledges the existence of each search node. This is used to enable CrowdHTN to determine a global UNPLAN. To do this each worker reports whether it has any work left. A worker reports true if it has a non-empty fringe or at least one outgoing work package. \\
+This capability is especially helpful for small instances where it is plausible to explore the whole search space. As we saw in the earlier section on complexity (\ref{prelim: tohtn complexity}), TOHTN planning is in D-EXPTIME making it infeasible to explore the whole search space for big instances.
+\begin{algorithm}
+	\caption{The parallel CrowdHTN algorithm}
+	\label{crowd: parallel algo}
+	\While{true}{
+		work\_step()\;
+		
+		\If{fringe.empty and not has\_active\_work\_request}{
+			r $\gets$ random worker id\;
+			send work request(r)\;
+			has\_active\_work\_request $\gets$ true\;
+		}
+		
+		\For{(message, source) $\in$ incoming messages}{
+			\If{message is work request}{
+				\eIf{fringe.has\_work()}{
+					send positive work response(fringe.get\_work(), source)\;
+					outgoing work messages += 1\;
+				} {
+					send negative work response(source)\;
+				}
+			}
+		
+			\If{message is work response}{		
+				\If{response is positive}{
+					fringe.add(work response)\;
+					send work ack(source)\;
+				}
+				has\_active\_work\_request $\gets$ false\;
+			}
+		
+			\If{message is work ack}{
+				outgoing work messages -= 1\;
+			}
+			
+		}	
+	}
+\end{algorithm}
+
+\subsection{Adapting CrowdHTN to a Malleable Environment}
+- deal with missing messages
+- we could send return messages to root or deal with missing messages (restarts!)
+- how to deal with workers dieing? (not :P)
+
+- ensure completeness
+- ensure performance
+- work stealing is kinda nice here

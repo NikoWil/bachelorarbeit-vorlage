@@ -1,12 +1,20 @@
 \section{Search Algorithms Used in CrowdHTN}
+- as mentioned in \cite{holler2020htn}, we can use a fringe-based implementation of progression search to swap out the fringe and realize different search strategies
+- the old implementation of Crowd did not properly do this, but we switched the implementation to allow us to test different algorithms here
 
 \subsection{Random DFS}
+
 
 \subsection{Random BFS}
 - trivially complete, will always encounter everything
 - reference statistics (branching factor from Crowd, minimal plan depth from Lilotane) to show that 
 
 \subsection{GBFS}
+\cite{holler2020htn} (PANDA GBFS)
+	- heuristics allow us to not explore all of the search space
+	- hierarchy and world state both restrict our search, we should consider both, makes heuristic design difficult
+	- 
+
 - inspired by PandaGBFS
 - GBFS:
 	- use a heuristic to grade each node
