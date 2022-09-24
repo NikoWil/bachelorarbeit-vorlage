@@ -3,16 +3,25 @@
 \subsection{Reducing Memory Consumption}
 
 \subsubsection{Efficiently Storing the Preceding Plan}
-\begin{itemize}
-	\item Use the ImmutableStack<T> structure
-	\item 
-\end{itemize}
+- no longer use a vector of USignature
+- instead use an ImmutableStack<USignature>
+- this way we can go from linear overhead to constant memory per search node!
+- actually, with A star or loop detection via hashset it gets like, really complicated
+- argh
+- still, lots of sharing!
+- lets protocol the thing (memory logging overall)
 
 \subsubsection{Reducing Copies of the World State}
+- if the next open task is an action, there is only a single possible way to resolve it
+- in other words, a search node whose next open task is an action always has zero or one children
+- this is not a very interesting node, either the preconditions hold or they do not
+- such nodes are no longer represented explicitly
+- instead, apply all actions from the sequence of open task up until the first abstract task is encountered
+- then also resolve that abstract task
+\todo{Add graphic showing how many fewer nodes are represented!}
 
 \subsubsection{Only Saving 'Potentially Interesting' Nodes}
 
-\subsection{Making Crowd More CPU Efficient}
 
 \subsection{Efficiently Hashing Nodes of the Search Graph}
 \todo{Time is not actually constant for world state -> what is the expected time?}

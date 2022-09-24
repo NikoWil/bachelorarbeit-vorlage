@@ -1,0 +1,14 @@
+\subsection{Adapting CrowdHTN for Use in Mallob}
+- CrowdHTN is no longer a standalone process
+- one way would be to launch CrowdHTN as a new process from within Mallob
+- instead re-architect CrowdHTN to prepare it as a library for external use
+- the abstractions of CrowdWorker \todo{check name!} and CooperativeCrowdWorker
+- the TohtnMultiJob (representing a crowd worker) contains a thread which executes CrowdHTN internally
+- CrowdHTN no longer worries about how messages are sent and received (completely agnostic to the mechanism)
+- on the Mallob side, messages are received and written to a buffer protected by mutex
+- the crowd thread takes all available messages and forwards them to CrowdHTN
+- similarly, Crowd generates messages, hands them to Mallob and stops caring
+
+- communication between Mallob and CrowdHTN happens via atomic boolean flags (except for the mutex'd message buffers)
+- this ensures that all Mallob Job functions respond fast
+- even initialization of CrowdHTN (parsing, starting the work thread) happens within it's own thread to return fast
