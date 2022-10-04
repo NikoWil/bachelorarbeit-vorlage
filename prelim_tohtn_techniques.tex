@@ -4,18 +4,36 @@
 - SAT-based
 - often with a BFS-like characteristic (Tree-Rex, Lilotane, TotSat)
 
-\subsubsection{Progression Search}
+\subsubsection{Search-based}
+- take definitions from \cite{holler2020htn} unless noted otherwise
+- explain where we differ from HTN progression search (holler2020htn also does this)
+- 
+The definitions of plan space search and progression search in this section are taken from \cite{holler2020htn} unless noted otherwise.
+
+\paragraph{Plan Space Search}
+- search for parts of plans
+- 
+
+\paragraph{Progression Search}
 \cite{holler2020htn}
 	- progression search is one of the best known search algorithms
 	- generate plans in a forward way
-	- always resolve a task that has no more open predecessors with the ordering constraints
+	- always resolve a task that has no more open predecessors with the ordering constraints (is called 'unconstrained task')
 		- own: for TOHTN: we always have exactly 1 task we want to process next!
+		- makes it trivial to find the next unconstrained task
+		- mentioned in the paper
 	- progression search planners always know the current (world) state, can use this information for heuristics, pruning etc
 	
 	- other planners search partial plans but not in order, they thus cannot know the current world state
+	- perform goal test on popping: find optimal plan if popping order is informed by cost
+	- perform goal test before popping: explore fewer nodes
+	
+	- Alford et al, 2012, Thm. 3 -> HTN problem is solvable <=> there is a solution in progression space
+	
+	- parts of the search space will be searched more than once if no additional measures are taken
 	
 \begin{algorithm}
-	\caption{Classical Progression Search as introduced in \cite{holler2020htn}}
+	\caption{Classical Progression Search for HTN as introduced in \cite{holler2020htn}}
 	$fringe \gets \{ (s_0, tn_I, \epsilon)\}$\;
 	\While{$fringe \neq \emptyset$}{
 		$n \gets fringe.pop()$\;
