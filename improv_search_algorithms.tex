@@ -31,7 +31,7 @@ Overall, we do not expect high performance of our breadth-first search. It may h
 - will help validate assumptions about TOHTN characteristics
 \end{comment}
 
-\subsubsection{Greedy Best-First Search}
+\subsubsection{Heuristic Search}
 Both depth-first and breadth-first search are unguided and do not depend the order of search node exploration on any information contained in those nodes. Other planners, such as PANDA, use heuristics to guide their search. We will describe general information about heuristics and their use in PANDA according to \cite{holler2020htn} and then describe how we try and adapt the use of heuristics for malleable TOHTN planning.
 
 \paragraph{Heuristics in HTN in general and PANDA specifically}
@@ -62,7 +62,7 @@ One avenue to deriving heuristics for HTN planning would be to adapt classical p
 - heuristic is based on a grounded model
 \end{comment}
 
-\paragraph{Problems with the PANDA heuristic for malleable TOHTN planning}
+\paragraph{Problems with the PANDA heuristic for malleable HTN planning}
 While PANDA has managed to make great use of heuristics in HTN planning, we cannot simply adopt the same heuristics for malleable CrowdHTN. The reason for this lies in the assumption of PANDA that a ground problem instance is already available. Grounding is an expensive operation, though, as discussed in \cite{behnke2020succinct}. A full grounding may be exponential in size compared to the input and runtimes of grounding and can be accordingly high. \\
 While such a grounding is already available in PANDA, CrowdHTN does not perform explicit grounding before planning. Doing so may prove interesting for a parallel planner where the grounding would only be performed once. In a malleable environment without shared memory we can expect this grounding to take place every time a new worker is added, adding a high startup cost. Worse, a short-lived worker may be interrupted while still grounding, never getting around to any planning work. This would interfere with the efficient usage of available resources. For this reason we have decided against using the PANDA heuristics in CrowdHTN and instead tried to design a simpler heuristic to be used in malleable TOHTN planning.
 \begin{comment}
@@ -72,8 +72,8 @@ While such a grounding is already available in PANDA, CrowdHTN does not perform 
 - depending on instance grounding can take multiple minutes! (even for the efficient PANDA grounder up to 40 seconds)
 - we perform this work multiple times, especially in a malleable environment
 \end{comment}
-\paragraph{A Heuristic for malleable TOHTN Planning}
-To counter the startup cost of the PANDA heuristic, we have devised a simpler heuristic which is cheap to precompute and can easily be used in malleable planning. The goal is to have only an efficient precomputation step and an evaluation in $\mathcal{O}(1)$. While this necessarily limits any precomputation to the lifted instance and the precision of our heuristic comes with problems as discussed in the previous paragraphs, we hope to still find some performance gains on at least some problem instances. \\
+\paragraph{A Heuristic for malleable HTN Planning}
+To counter the startup cost of the PANDA heuristic, we have devised a simpler heuristic which is cheap to precompute and can easily be used in malleable planning. The goal is to have little startup overhead and to retain the efficient evaluation at each planning step. While this necessarily limits any precomputation to the lifted instance and the precision of our heuristic comes with problems as discussed in the previous paragraphs, we hope to still find some performance gains on at least some problem instances. \\
 As heuristic value, we simply use a lower bound on the number of reductions we still need to perform to fully resolve our list of open tasks. When computing this lower bound we ignore preconditions and effects, searching the shortest possible way through the hierarchy. We precompute this value for each task as described in algorithm \ref{algo: gbfs heuristic}. The remaining depth for each action is initialized to zero. The remaining depth for each abstract task is initially unknown. In each step we loop over all tasks $t$ whose remaining depth is unknown. For each method $m$ of task $t$ we check the depth of all subtasks. If all depths are known, the method depth is set to the sum of all subtask depths plus one. For each task we choose the minimum value over all available reductions. \\
 If in any iteration we do not get a new depth for at least one task, we stop the computation. Any task which does not have an assigned depth at this point is not resolvable at all and can be ignored. \\
 Let $t_a$ be the set number of abstract tasks, $t_p$ be the number of primitive tasks and $m$ the number of methods. A single iteration takes time in $\mathcal{O}(t_a + m)$. The number of overall iterations required is bound by $t_a$, as in any iteration at least one abstract task will be assigned it's final score, as we do not have any negative cycles. This gives us an overall runtime bound of $\mathcal{O}(t_p + t_a \cdot(t_a + m))$. As all those numbers are relating to the lifted instance we expect the overall runtime to be small in practise.
@@ -126,22 +126,44 @@ The heuristic:
 \end{algorithm}
 To evaluate our heuristic while planning, we now need to look not only at one but at the whole sequence of open tasks and calculate the sum of our heuristic over those tasks. While the naive solution gives us linear runtime in the number of open tasks, we can stretch the computation over task instantiation and reuse parts of it to perform heuristic evaluation in $\mathcal{O}(1)$ at runtime.
 \cite{refer to implementation chapter - we build up the sum as we instantiate new search nodes}
+Additionally, while we only use this heuristic to guide TOHTN planning, it ignores any orderings between open tasks. As such, it can be applied to HTN planning as well.
 
-\subsubsection{A-Star}
-
-
-- same heuristic as GBFS
-- also track the number of applied reductions so far
-- gives us completeness (even without loop detection!) as the length of the path so far gives us a kind of BFS characteristic to the whole thing
-- for each node we know exactly that any path
-- we modify A* to terminate as soon as we find a goal for the first time
-- could turn into an anytime algorithm by keeping up the search until optimal plan
+\paragraph{Using the new heuristic in TOHTN planning}
+With the new heuristic presented in the previous paragraph, we implemented two new search algorithms for CrowdHTN, those being a guided depth-first search and an A-star like search. \\
+The implementation of depth-first search used so far performs the search in a uniformly random order. Without knowing anything about the domain, this is a reasonable choice. While it is far from optimal search, it also avoids any pathological cases that may arise from a fixed order of exploration. As an alternative to this random order, we used the heuristic to guide our depth-first search. We have to note that this is still not necessarily deterministic. Randomness comes into play both when two reductions have the same heuristic score - which happens for different instantiations of the same method - and when performing work stealing in a parallel setting. \\
+In addition to the guided depth-first search, we also implemented an A-star like search where a node's value is the sum of the heuristic value and the number of applied reductions. We differ from A-star in that we terminate the search as soon as a plan has been found instead of continuing on the search for an optimal plan. The hope is that the heuristics guide us towards a plan while giving weight to the number of applied reductions forces us to turn back and explore other parts of the search space without getting lost in pathological cases.
 
 \subsubsection{Completeness of different Search Algorithms}
+In the previous paragraphs we discussed a number of different search algorithms that we implemented for CrowdHTN and how we expect them to effect the performance characteristics of our planner. The search algorithm has a more fundamental impact than that, however, and may effect the property of completeness. In this section we want to give a short overview over the completeness of each of the algorithms. A short overview can be seen in table \ref{table: search completeness}. Note that this discussion is only about the algorithms without any modifications. In section \ref{improv: loop detection} we discuss loop detection mechanisms to improve those algorithms which are so far not listed as complete. \\
+\begin{table}
+	\caption{Completeness of the different search algorithms in CrowdHTN}
+	\label{table: search completeness}
+	\centering
+	\begin{tabular}{| l | l |}
+		\hline
+		Algorithm & Completeness Property \\
+		\hline
+		Random DFS & Not complete. Positive probability to find a plan if it exists \\
+		Random BFS & Complete \\
+		Heuristic DFS & Incomplete \\
+		A-star like & Complete \\
+		\hline
+	\end{tabular}
+\end{table}
+Depth-first search is not complete as it may enter an endless loop and, even if it still explores side-tracks from this loop, will never be able to backtrack to before the start of this loop, cutting of parts of the search space. There is however always a chance to find a plan if it exists. I.e., there is a non-zero chance that the random choices all happen to be done correctly and the goal is found even if other paths may lead into endless loops. \\
+Breadth-first search on the other hand is trivially complete. While the exploration order within each layer is random we can provide an upper bound on the number of steps required to explore a given search node $n$ on layer $i$. One such bound is the sum of all layer sizes from 0 up to and including $i$. \\
+Next in our list is heuristic depth-first search. Similar to random depth-first search it may run into an endless loop. Compared to depth-first search, however, heuristic depth first search may do so in a deterministic fashion if the domain triggers a pathological case in the heuristic. One example domain which would trigger such a case in our heuristic is visualized in figure \ref{figure: improv heuristic pathological}. Here rectangles stand for tasks, rounded rectangles for actions and arrows to reductions. Assume we want to resolve task $t_1$ where the preconditions of $m_1$ do not hold while those of $m_2, m_3, m_4, m_5$ are fulfilled. Our heuristic will want us to resolve $t_1$ via $m_1$ which does not work. Then the next shortest path to a full resolution is through $m_2, m_1$. $m_2$ will be applied successfully to recurse, $m_1$ will fail again and the cycle continues like this forever. The path through $m_3, m_4, m_5$ has length 3 and will thus never be taken. \\ 
+\begin{figure}
+	\caption{A pathological case in our new HTN heuristic}
+	\label{figure: improv heuristic pathological}
+	\includegraphics[width=0.5\textwidth]{images/prelim/improv_heuristic_pathological}
+\end{figure}
+Lastly, we implemented our heuristic search. While it does reuse the same heuristic, this algorithm achieves completeness by also valuing the number of applied methods so far. Let $n$ be a node with heuristic value $h$ and $r$ previously applied reductions to reach $n$. Then $n$ is guaranteed to be explored once all nodes with at most $h + r$ previously applied reductions have been explored. \\
+All of this discussion so far has assumed sequential planners. We can easily extend the incompleteness of random and heuristic depth-first search to the parallel case. If we have an upper bound $p$ on the number of parallel processes we can build a domain as in figure \ref{figure: improv heuristic pathological} which does not induce 1 but $p$ endless looping opportunities that either trigger our heuristic or may simply be taken due to random chance. In this way, using parallelism does not get us to completeness but it does improve the our chances of at least 1 process taking the correct path.
+
+\begin{comment}
 - dfs: may find any solution but may also run into the wrong direction
 - bfs: definitely complete, each node has an easy upper bound for when it is reached
-
-At the same time, breadth-first search has the advantage of being trivially complete as we can easily define an upper bound for the number of steps until a search node $s$ is explored - if $s$ is in layer $i$ one such bound is the number of nodes contained in all layers up to and including $i$. This completeness property holds even without techniques such as loop detection which differs bread-first search from our other algorithms.
-
 - gbfs: may not find a plan at all if a heuristic is sufficiently pathological on an instance, leading into an endless loop
 - astar: complete, distance travelled forces some bfs-like characteristics back into our exploration leading to completeness
+\end{comment}
