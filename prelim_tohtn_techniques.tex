@@ -1,8 +1,33 @@
 \subsection{Techniques to solve TOHTN planning problems}
+In this section, we will give an overview over the different techniques with which HTN problems can be solved. The HTN planners produced by researchers can be classified along two main axes:
+\begin{itemize}
+	\item the planning algorithm
+	\item lifted vs grounded approaches
+\end{itemize}
+For the algorithms, the two main variations are translation-based algorithms that take an HTN instance and translate it into a problem in a simpler complexity class such as classical planning or SAT and search-based algorithms, that utilize techniques such as plan-space search and progression search. We will focus on progression search here, as it is the technique employed in our own planner, CrowdHTN. \\
+After that we will have a short discussion on lifted versus grounded approaches which is largely independent of the search algorithm.
+\begin{comment}
+- multiple ways to solve HTN instances
+- planners can be classified on two axis: the algorithm and lifted vs grounded
+- in practise, most algorithms are based on translation to SAT or on search algorithms
+- we will focus on search-based as we will see in later section \ref{prelim: crowdhtn} that this is what our own planner utilizes
+\end{comment}
 
-\subsection{SAT-based}
-- SAT-based
-- often with a BFS-like characteristic (Tree-Rex, Lilotane, TotSat)
+\subsection{Translation-based} \todo{Title instead as "SAT-based"?}
+One of the main techniques employed in HTN planning is to find an efficient encoding into a simpler problem. Two such problems are classical planning (\cite{alford2016bound}) and propositional logic (SAT). While translation to SAT was already proposed in 1998 (\cite{mali1998encoding}), the first complete encodings without assumptions about the instance were publicized in 2018 (\cite{behnke2018totsat}). In recent years, SAT seems to be the most popular problem to translate an HTN instance into, utilized by planners such as totSAT (\cite{behnke2018totsat}, \cite{behnke2018tracking}), Tree-REX (\cite{schreiber2019tree}) and Lilotane (\cite{schreiber2021lilotane}). \\
+As we have seen in the previous section \ref{prelim: tohtn complexity} on (TO)HTN complexity, (TO)HTN problems are in D-EXPTIME and undecidable respectively. Both classical planning and SAT are less powerful. As a result, HTN problems cannot be encoded and even for TOHTN problems we would suffer a blowup in the size of the instance. Instead, as noted in \cite{schreiber2019tree}, SAT-based planners tend to explore the set of potential hierarchies layer by layer, increasing the encoding size as they go. As a result, those SAT-based planners tend to have a BFS-like characteristic to their search.
+
+\begin{comment}
+- may translate to classical planning \cite{alford2016bound}
+- SAT-based has been known since 1998 \cite{mali1998encoding}
+- tend to explore the hierarchy layer-by-layer \cite{schreiber2019tree}
+- this gives the search a BFS-like characteristic
+- this is needed, as SAT is NP-complete compared to HTN which is undecidable and TOHTN which is in D-EXPTIME \ref{prelim: tohtn complexity}
+- encoding the whole instance would be impossible in case of HTN and lead to blowup in instance size in case of TOHTN
+- going bit by bit is done instead
+
+- example planners are Tree-REX \cite{schreiber2019tree}, totSAT \cite{behnke2018totsat}, Lilotane \cite{schreiber2021lilotane}
+\end{comment}
 
 \subsubsection{Search-based}
 - take definitions from \cite{holler2020htn} unless noted otherwise
@@ -15,6 +40,7 @@ The definitions of plan space search and progression search in this section are 
 - 
 
 \paragraph{Progression Search}
+\label{prelim: progression search}
 \cite{holler2020htn}
 	- progression search is one of the best known search algorithms
 	- generate plans in a forward way
@@ -57,7 +83,10 @@ The definitions of plan space search and progression search in this section are 
 	}
 \end{algorithm}
 
-- search-based
+\subsubsection{Lifted and Ground HTN Planning}
+- efficient grounding is its own research area \cite{behnke2020succinct} \todo{cite the other comparison papers from behnke's work}
+
+
 - lifted vs grounded
 	- Lilotane, HyperTensioN
 	- Panda, CrowdHTN, Tree-Rex

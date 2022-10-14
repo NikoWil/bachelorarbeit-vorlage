@@ -1,2 +1,20 @@
 \subsection{The Mallob Scheduler}
 \label{prelim: mallob}
+all from \cite{schreiber2021scalable}
+- Mallob - \textbf{Ma}lleable \textbf{Lo}ad \textbf{B}alancer or \textbf{M}ulti-tasking \textbf{A}gi\textbf{l}e \textbf{Lo}gic \textbf{B}lackbox
+- Mallob contains a parallel SAT solver
+- is able to solve multiple instances in parallel, adjusting resources per job on a dynamic basis
+- is a decentralized malleable job scheduler
+- there is no shared RAM, communication via message passing
+- jobs $j$ can arrive at arbitrary times
+	- for SAT: a logic formula in Conjunctive Normal Form (CNF)
+	- each job $j$ has a constant priority $pi_j \in (0, 1)$
+	- each job $j$ has a variable (over time) resource demand $d_j \in \mathcal{N}$
+		- simple case: $d_j$ is the number of available PEs
+	- $d_j$ allows a job how many resources it is able to utilize at most
+	- Mallob expects the number of active jobs to be lower than the number of workers, i.e. that $d_j > 1$
+		- each PE works on only one job at a time
+	- the first PE assigned to a job $j$ is its root and is fixed over the lifetime of the job
+	- the volume of a job is proportional to $d_j p_j / \sum_{j'} d_{j'} p_{j'}$
+	- PEs of a job are arranged as a binary tree which is complete except for potentially the lowest layer (nodes from the right of the last layer may be missing)
+	- new nodes in a job are preferably taken from the list of suspended nodes of this job

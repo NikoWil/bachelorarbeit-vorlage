@@ -4,7 +4,7 @@
 \todo{Make sure to always talk about isomorphic task networks instead of equivalent? Quote \cite{holler2021loop}. Define isomorphism!}
 \todo{quote about loop detection in graph search?}
 \todo{quote about distributed loop detection in graph search?}
-This section will discuss loop detection as it is used in (TO)HTN planning in general. It will start with an overview over loop detection in other HTN planners in section \ref{ld - history others}. This is followed by a discussion of the simplifying assumptions we can make for TOHTN planning (section \ref)
+This section will discuss loop detection as it is used in (TO)HTN planning in general. It will start with an overview over loop detection in other HTN planners in section \ref{ld - history others}. This is followed by a discussion of the simplifying assumptions we can make for TOHTN planning in section \ref{ld - tohtn simplifications}.
 - distributed loop detection (communication and merge operations become important!)
 - perfect loop detection
 - probabilistic loop detection (approximate membership query)
@@ -46,8 +46,7 @@ While both PANDA and HyperTensioN are HTN planners, CrowdHTN concerns itself onl
 \todo{refer to the implementation part where the open tasks are represented as a sequence} \\
 Crowd identifies search states as a tuple of $(s, tn)$ of world state $s$ and task network $s$, similar to PANDA and uses hashing to efficiently identify duplicate search states. As tasks of equivalent task networks are always in the same order, we can incorporate that order into our hash of $tn$ to reduce the number of collisions compared to PANDA's \textit{taskhash}. This will increase performance where we fall back to comparisons in case of collisions and reduce our false-positive rate in case we use probabilistic loop detection. 
 \todo{Refer to the implementation and how we reduce hashing to O(1) time} \\
-Both PANDA and HyperTensioN are sequential planners whereas CrowdHTN is highly parallel. This adds an additional design constraint to our loop detection. If we want to efficiently share information about visited states using the full state information becomes infeasible as full states would have to be communicated. If we perform loop detection only locally, we predict to suffer from decreased performance the higher the degree of parallelism. I.e., if two branches of our search tree contain the same search node, the chance that those two branches are encountered on different processors is higher the more processors we have.
-
+Both PANDA and HyperTensioN are sequential planners whereas CrowdHTN is highly parallel. This adds an additional design constraint to our loop detection. If we want to efficiently share information about visited states using the full state information becomes infeasible as those full states would have to be communicated. If we perform loop detection only locally, we predict to suffer from decreased performance the higher the degree of parallelism. I.e., if two branches of our search tree contain the same search node, the chance that those two branches are encountered on different processors is higher the more processors we have.
 \begin{comment}
 	- keep the part where we store loop detection information externally
 	- be sure we can always assume total order (and keep the ordering information to reduce false-positive rate!)
@@ -62,7 +61,6 @@ One simple way to perform loop detection which is similarly used in PANDA (\cite
 Using hashes combined with a full comparison provides us a perfect loop detection, i.e., neither false positives nor false negatives exist. This makes it a useful technique to benchmark other loop detection methods. However, both in the sequential and in the distributed case this technique suffers from performance problems. \\
 In case of hash collisions, we have to fall back to a full comparison of world state $s$ and open tasks $tn$. While $s$ is bound in size by the total number of predicates, the size of $tn$ is effectively unbound \todo{quote about max. exponential depth!}. Additionally, we have to keep both $s$ and $tn$ around for all nodes ever encountered, increasing the memory footprint of our program.
 In case of distributed loop detection, communicating full states would lead to a large communication overhead. Especially, we can expect each node to be larger than those sent as work packages, as those are optimized to have a small $tn$ which would not hold for nodes encountered in our loop detection.
-
 \begin{comment}
 	- Additionally, there is the full comparison for the world state
 	- in practise this can be a problem, at the same time asymptotically it should not matter as it will be dwarfed by the 
@@ -73,8 +71,23 @@ In case of distributed loop detection, communicating full states would lead to a
 	- however, it is a useful benchmark as to how many loops we *should* expect
 \end{comment}
 
-\subsubsection{Bloom Filters}
+\subsubsection{Statistical Loop Detection}
+\todo{Approximate Membership Queries}
 \todo{Write about why a quotient filter is not the solution! (or at least why it was not chosen)}
+
+\paragraph{Approximate membership queries}
+- efficient merging is possible
+- communication is size efficient (especially does not depend on the number of workers!)
+
+\paragraph{Completeness in the face of false positives}
+- we loose completeness 
+
+- go back to something like HyperTensioN, accepting some false positive rate
+- approximate membership query 
+- we get either 'definitely contained'
+- or 'maybe contained'
+- examples are bloom filter and quotient filter
+
 Quotient filter:
 - do we need the original elements to re-insert them?
 - do we need to communicate whole hashes to combine filters? (worse communication size!)

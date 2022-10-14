@@ -1,0 +1,39 @@
+\subsection{A Common (TO)HTN Interface}
+- be able to mix grounders, pruners, planners - maybe even loop detection!
+- be able to combine different pruners - use a lifted pruner early and then plug in a grounder and grounded pruner afterwards
+- PANDA seems to try to provide this
+	- quite successful regarding the input format for HTN planning which finally makes planners easily comparable, advancing the state of the art
+	- sadly not as successful for the rest of planning
+- we believe their to be great potential in 
+
+\subsection{Combine Pruning Approaches}
+- HyperTensioN and Panda base their pruning on different paradigms
+- HyperTensioN's pruning could be extended to work on grounded instances where it would have even more information available
+- both these approaches are structurally different and could thus be used to compliment each other
+- whether the better pruning would offset the increased runtime cost remains to be seen
+
+\subsection{Investigate the Completeness of Planners}
+- some planners are known to not be complete
+- some planners can easily be shown to be complete
+- we make a case in section \todo{Ref where we destroy our own heuristic and PANDA} that heuristic planners may not be complete
+- to catch these cases planners may have to get more intelligent about which parts of the search space to cut off
+- else we may have to adapt our search algorithms to enforce completeness at another level
+- similarly we may achieve completeness by simply cutting off the search once we get too deep \todo{cite exponential max depth}
+- however, this may be theoretically complete but also hits us with the full expense of an EXPSPACE-hard problem, i.e. we may never realistically reach this condition (except on very small problems)
+- similarly it is not clear whether an algorithm like heuristic + plan length search gives us completeness in feasible time or more theoretically \todo{Compare with results once they arrive}
+- HyperTensioN, a decidedly non-complete planner is also the best-rated planner in the IPC 2020
+- maybe we need to have a full conversation on how much completeness we actually want/ need (or two separate categories of planners between 'HTN as a way to provide advice into planning domains \todo{quote Erol, I think?}' and 'HTN for the full power it provides')
+
+\subsection{Lifted Parallel Search}
+- the Crowd way of performing relatively simple search does not work out in the end
+- we can still see some scaling for the parallel case
+- lifted planning could massively shrink our search space (by an exponential factor in the number of nodes!)
+- lilotane provides much intelligence on how to perform lifted search
+- same as HyperTensioN
+- a lilotane-like behavior may be the best from a practical perspective, as it is more consistent
+- a search-based formulation may be easier to both parallelize and adapt to a malleable context - any search may be plugged in where CrowdHTN currently resides
+
+\subsection{Improvements Unlocked by a Shared Memory Implementation}
+- we have decided to stay with CrowdHTN's way of performing grounding on-demand and just in time, as it lends itself particularly well to a malleable environment
+- specifically, having to perform a big chunk of work that is not yet possible to lead to a plan would impose a problem on the efficiency of new and short-lived workers
+- in a shared-memory environment, this could be done once by the root and then re-used by other workers, making better pruning and heuristics such as in PANDA available

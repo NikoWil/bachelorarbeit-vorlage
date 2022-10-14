@@ -20,7 +20,6 @@ With the definition of a predicate in place, we can then define a grounding as w
 	A \textbf{state} $s \in 2^{\mathcal{Q}}$ is a set of ground predicates for which we make the closed-world-assumption. Under the closed-world-assumption, only positive predicates are explicitly represented in $s$. All predicates not in $s$ are implicitly negative.
 \end{definition}
 
-
 \begin{definition} % primitive task/ action
 	With $T_p$ the set of primitive task symbols, a \textbf{primitive task} $t_p$ is defined as a triple $t_p(\Tilde{t}_p (a_1, \ldots, a_k), pre(t_p), eff(t_p))$. $\Tilde{p} \in T_p$ is the task symbol, $a_1, \ldots, a_k \in \mathcal{C} \cup \mathcal{V}$ are the task arguments, $pre(t_p) \in 2^{\mathcal{P}}$ the preconditions and $eff(t_p) \in 2^{\mathcal{P}}$ the effects of the primitive task $t_p$. We further define the positive and negative preconditions of $t_p$ as $pre^+(t_p) := \{p \in pre(t_p) : p \text{ is positive}\}$ and $pre^-(t_p) := \{p \in pre(t_p) : p \text{ is negative}\}$. We define $eff^+(t_p)$ and $eff^-(t_p)$ analogously. \\
 	We call a fully ground primitive task an \textbf{action}.
@@ -68,10 +67,9 @@ It is possible to simplify the model s.t. $\tau_0$ always consists of only a sin
 \label{prelim: tohtn complexity}
 The complexity of HTN and TOHTN planning has been studied in many papers. Here the problem PLANEXIST describes, whether for any given (TO)HTN instance a plan exists at all. It is not concerned with optimality. \\
 Early on it was shown by \cite{erol1994htn} and \cite{erol1996complexity} that the complexity of hierarchical planning formalisms depends on things such as the existence and ordering of non-primitive tasks, whether a total order between tasks is imposed and whether variables are allowed. The combination of arbitrary non-primitive tasks, no total order imposed and allowing variables is what we talk about with HTN planning, the same combination but with a total order is what we mean with TOHTN planning. They showed that HTN planning is semi-decidable whereas TOHTN planning is decidable in D-EXPTIME while being EXPSPACE-hard. \\
+We can see what D-EXPTIME means in practise when we consider the maximum size of a task network we need to consider. From \cite{behnke2018totsat} we know that if a solution to an HTN instance exists, it can be found within a maximum depth of $|T_c| \cdot(2 ^{|\mathcal{Q}|})^2$. Similarly, we see that a task network can have exponential width in it's depth. Consider for this an instance constructed such that each compound task has exactly two children and where primitive tasks are only occuring at the bottom most layer. Now each layer will be twice as wide as the one before, giving us exponential width. \\
 Regarding the general relationship of hierarchical planning to complexity theory, \cite{erol1994htn} and \cite{erol1996complexity} showed early on that HTN instances can be used to simulate context-free languages. This was extended by \cite{holler2014language} who showed that TOHTN instances correspond exactly to context-free grammars. \\
 In addition to planning itself, the problem of plan verification was studied. Here, \cite{behnke2015complexity} showed that plan verification is NP-complete, even under the assumption that not only the plan but also the decompositions leading to it are provided.
-
-\todo{Provide a citation for the max. depth of a task network until a plan is found or does not exist}
 
 \begin{comment}
 \cite{erol1994htn}
@@ -97,11 +95,7 @@ both: context-free grammars can be simulated by HTN, use primitive tasks as term
 - this even holds if the list of decompositions is provided
 \end{comment}
 
-\todo{find a place to cite this info! Is contained in Gregor Behnke's thesis}
-- the depth of our task network (until a plan is found) can be exponential in the input size
-- plan length is up to exponential in depth
-
-\cite{behnke2019finding} mentions 4 ways to compute upper bounds on the task network size
+\todo{\cite{behnke2019finding} mentions 4 ways to compute upper bounds on the task network size?}
 
 \subsubsection{Differences from other Kinds of Planning}
 \cite{nau2007current} creates a classification of planners into domain-specific, domain-independent and domain-configurable planners.
