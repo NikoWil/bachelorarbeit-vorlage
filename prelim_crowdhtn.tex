@@ -1,7 +1,7 @@
 \subsection{The CrowdHTN Planner}
 \label{prelim: crowdhtn}
 The CrowdHTN (Cooperative randomized work stealing for Distributed HTN) planner is implemented as a parallel state machine that uses work stealing for work balancing purposes. According to the definition of \cite{feitelson1997job} we introduced in section \ref{prelim: malleability}, CrowdHTN is a moldable task, as the number of workers is arbitrary but fixed during execution. \\
-Each local worker of CrowdHTN owns it's own queue of search nodes, tuples of \textit{open tasks} and \textit{world state} and performs progression search on these nodes as explained in section \ref{prelim: progression search}. The basic CrowdHTN parallel search algorithm is shown in algorithm \ref{crowd: parallel algo}. \\
+Each local worker of CrowdHTN owns it's own queue of search nodes, tuples of \textit{open tasks} and \textit{world state} and performs progression search on these nodes as explained in section \ref{prelim: techniques search}. The basic CrowdHTN parallel search algorithm is shown in algorithm \ref{crowd: parallel algo}. \\
 In the initial state, only the root worker has any search nodes. All other workers start empty. To perform load balancing, randomized work stealing is used \todo{get a citation}. The work package exchange is implemented as a three step protocol
 \begin{enumerate}
 	\item work request
@@ -9,7 +9,8 @@ In the initial state, only the root worker has any search nodes. All other worke
 	\item ack (if response was positive)
 \end{enumerate}
 Upon sending a positive work response, a worker increments it's local tracker of outgoing work packages. When receiving an ack, the local tracker of outgoing work packages is decremented. This ensures that there is always at least one node that acknowledges the existence of each search node. This is used to enable CrowdHTN to determine a global UNPLAN. To do this each worker reports whether it has any work left. A worker reports true if it has a non-empty fringe or at least one outgoing work package. \\
-This capability is especially helpful for small instances where it is plausible to explore the whole search space. As we saw in the earlier section on complexity (\ref{prelim: tohtn complexity}), TOHTN planning is in D-EXPTIME making it infeasible to explore the whole search space for big instances.\\ 
+This capability is especially helpful for small instances where it is plausible to explore the whole search space. As we saw in the earlier section on complexity (\ref{prelim: tohtn complexity}), TOHTN planning is in D-EXPTIME making it infeasible to explore the whole search space for big instances.\\
+\todo{Initially there was no fringe}
 The specifics of which node to explore for a work step and which node to split off to send a positive work response depend on the fringe implementation. In general, we perform work at the back end of the fringe, in the case of depth-first-search these are the last nodes to have been inserted. To split off work, we take from the front end of the fringe. This is done as a heuristic to split off a node which is still far from a plan and thus forms a relatively larger work package, leading to less communication. In case of depth-first search, this reduction of communication volume is doubly true. Nodes which are close to the beginning of our search path generally have fewer open tasks, reducing the size of the message when sending it off.
 \begin{algorithm}
 	\caption{The parallel CrowdHTN algorithm}

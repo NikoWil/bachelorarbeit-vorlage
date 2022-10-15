@@ -30,36 +30,35 @@ As we have seen in the previous section \ref{prelim: tohtn complexity} on (TO)HT
 \end{comment}
 
 \subsubsection{Search-based}
+\label{prelim: techniques search}
+The second main category of techniques to solve HTN planning problems are search-based algorithms, such as plan space search and progression search. Both of these are described in \cite{holler2020htn}. Plan space search, as the name says, searches the space of partial plans, aiming to fix flaws 
 - take definitions from \cite{holler2020htn} unless noted otherwise
 - explain where we differ from HTN progression search (holler2020htn also does this)
-- 
-The definitions of plan space search and progression search in this section are taken from \cite{holler2020htn} unless noted otherwise.
 
-\paragraph{Plan Space Search}
-- search for parts of plans
-- 
-
-\paragraph{Progression Search}
-\label{prelim: progression search}
+Progression search on the other hand generates plans in a forward way. What is meant by this is that it always chooses an open task that is currently unconstrained, i.e. has no unresolved predecessors under the ordering constraints, and resolves it. This allows the planner to update the world state as it goes along, as the sequence of actions from the start to the current point is known at each step of the search. In case of TOHTN planning, the choice of the next unconstrained task becomes trivial, as there is always exactly one such task. Knowing the full world state gives progression search two main advantages over plan space search. First, it allows the planner to prune parts of the search space by immediately validating action and reduction preconditions against this world state. Second, it gives us maximum information to be used in heuristics that guide our search. \\
+The progression search algorithm is given in pseudocode in algorithm \ref{algo: progression search}. As mentioned, line 6 becomes trivial for TOHTN planning and the loop from lines 7  to 16 is no loop, as there is always exactly one unconstrained task. Additionally, the location of our goal test can be moved around, depending on need. Performing the goal test upon popping a node is useful if we want to find optimal plans and our fringe data structure - and thus popping order - have a notion of node cost. Performing the goal test upon node creation allows us to terminate earlier. \\
+Notable search-based planners are SHOP (\cite{nau1999shop}), HyperTensioN (\cite{magnaguagno2020hypertension}), PANDA (\cite{holler2020htn}) and our own planner CrowdHTN which will be presented in a later section \ref{prelim: crowdhtn}.
+\begin{comment}
 \cite{holler2020htn}
-	- progression search is one of the best known search algorithms
-	- generate plans in a forward way
-	- always resolve a task that has no more open predecessors with the ordering constraints (is called 'unconstrained task')
-		- own: for TOHTN: we always have exactly 1 task we want to process next!
-		- makes it trivial to find the next unconstrained task
-		- mentioned in the paper
-	- progression search planners always know the current (world) state, can use this information for heuristics, pruning etc
-	
-	- other planners search partial plans but not in order, they thus cannot know the current world state
-	- perform goal test on popping: find optimal plan if popping order is informed by cost
-	- perform goal test before popping: explore fewer nodes
-	
-	- Alford et al, 2012, Thm. 3 -> HTN problem is solvable <=> there is a solution in progression space
-	
-	- parts of the search space will be searched more than once if no additional measures are taken
-	
+- progression search is one of the best known search algorithms
+- generate plans in a forward way
+- always resolve a task that has no more open predecessors with the ordering constraints (is called 'unconstrained task')
+- own: for TOHTN: we always have exactly 1 task we want to process next!
+- makes it trivial to find the next unconstrained task
+- mentioned in the paper
+- progression search planners always know the current (world) state, can use this information for heuristics, pruning etc
+
+- other planners search partial plans but not in order, they thus cannot know the current world state
+- perform goal test on popping: find optimal plan if popping order is informed by cost
+- perform goal test before popping: explore fewer nodes
+
+- Alford et al, 2012, Thm. 3 -> HTN problem is solvable <=> there is a solution in progression space
+
+- parts of the search space will be searched more than once if no additional measures are taken
+\end{comment}
 \begin{algorithm}
 	\caption{Classical Progression Search for HTN as introduced in \cite{holler2020htn}}
+	\label{algo: progression search}
 	$fringe \gets \{ (s_0, tn_I, \epsilon)\}$\;
 	\While{$fringe \neq \emptyset$}{
 		$n \gets fringe.pop()$\;
@@ -84,10 +83,23 @@ The definitions of plan space search and progression search in this section are 
 \end{algorithm}
 
 \subsubsection{Lifted and Ground HTN Planning}
+As mentioned in section \ref{prelim: tohtn problems}, (TO)HTN instances are normally given in a lifted representation and can be ground, i.e. all variables are filled with all possible parameter combinations. Specifying the instance in a lifted fashion is done for ease of use, as it is a more compact representation and allows domains to be reused for different problems \cite{behnke2020succinct}. \\
+The efficient grounding and pruning of HTN instances is an active field of research (\cite{ramoul2017grounding}, \cite{behnke2020succinct}). While it is an easier problem than (TO)HTN planning itself, the ground instance may still be exponential in size compared to the lifted instance \cite{behnke2020succinct}. \\
+Planners may choose to operate on either lifted or ground instances. A discussion on the trade-offs involved is found in \cite{schreiber2021lilotane}. We will reiterate the main advantage of each approach here. Grounded representations have more information available for pruning. As an example, while some parameter combinations in reductions may lead to a contradiction later on and can thus be pruned, not all such combinations may be invalid and thus the corresponding lifted method may not be prunable. Lifted representations on the other hand may be a lot more compact in practice. For example, our (TO)HTN instance may want us to choose any of $N$ trucks to transport a package from $A$ to $B$ where in practice the choice might not matter. Whereas a grounded representation will have to instantiate all operators concerning a truck $N$ times, a lifted operation will avoid this and only choose a truck ad-hoc. \\
+The choice of grounded vs lifted representation is independent of the choice of planning algorithm. We have examples of grounded translation-based planners (totSat \cite{behnke2018totsat}, Tree-REX \cite{schreiber2019tree}), lifted translation-based planners (Lilotane \cite{schreiber2021lilotane}) and also search-based planners that work on both lifted (HyperTensioN \cite{magnaguagno2020hypertension}) and ground representations (PANDA \cite{holler2020htn}). \\
+Our own planner, CrowdHTN, walks a middle ground \todo{pun intended}. It performs its search on a ground representation to allow detailed pruning according to the world state. However, it does not front-load the cost of a grounding procedure and instead grounds tasks and methods as needed.
+\begin{comment}
+- grounding can be an expensive operation \cite{behnke2020succinct}
+- grounding is an active field of research within hierarchical planning \cite{ramoul2017grounding}, \cite{behnke2020succinct}
+- a discussion on the benefits and trade-offs of grounding is available in \cite{schreiber2021lilotane}
+- grounded representations can have more information available for subsequent pruning, i.e. only a certain parameter combination for a reduction may be invalid but not a whole method
+- lifted representations can be a lot more compact 
+
 - efficient grounding is its own research area \cite{behnke2020succinct} \todo{cite the other comparison papers from behnke's work}
 
 
 - lifted vs grounded
-	- Lilotane, HyperTensioN
-	- Panda, CrowdHTN, Tree-Rex
-	- lifted: more general, less pruning?
+- Lilotane, HyperTensioN
+- Panda, CrowdHTN, Tree-Rex
+- lifted: more general, less pruning?
+\end{comment}
