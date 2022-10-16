@@ -1,2 +1,51 @@
 \subsection{Malleability}
 \label{prelim: malleability}
+
+\cite{feitelson1997job} gives us a classification of parallel jobs
+- rigid: jobs which have a fixed number of required processors, this number stays fixed across iterations
+- moldable: jobs which require the number of processors to be fixed during execution, but may run on any number
+- evolving: a job whose needs change over time, it requests a number of parallel units for each phase
+- malleable: a job who can utilize a changing number of parallel units, the number can be changed externally and the job will adjust
+
+In evolving jobs, the different number is set by the job, in malleable jobs the system sets that changing number.
+- malleable systems have been shown to be highly efficient
+- the model is not very popular with users
+- malleability is less convenient for application writers, as it exposes them to the variation in available resources
+
+- efficiency:
+	- if we are not malleable we face a choice of either leaving PEs unassigned (and underutilized!), reducing throughput
+	- or alternatively we may fully utilize all PEs, worsening latencies for new jobs
+	
+- they propose models to make malleability work on the application side: work pile
+	- multiple independent cores get their task from the pile of work, independently and in unknown order
+	- PEs may be reassigned to a different job in between tasks
+- problems:
+	- the central work queue is a bottleneck
+	- what do we do if we want to reassign a PE in the middle of a task?
+	
+- alternatively we can redistribute our data structures upon changing number of PEs
+- this is an expensive operation and should be done as little as possible!
+
+\cite{tucker1989process}
+- also propose a big queue of tasks from which single processes take some to work on
+
+\cite{sonmez2007scheduling}
+- malleability is the ability to deal with changing resource allocation during execution (not only processors)
+- for the scheduler: change the decisions about resource allocation after they have been made
+- also helps performance as applications may be able to gain resources during runtime
+- malleability opens ways to extract more performance from clusters
+
+\cite{hungershofer2004combined}
+- in parallel systems, users want fast response times, administrators want high throughput and utilization
+- these needs contradict each other, malleable jobs can help!
+- programming models such as MPI support the moldable model
+- show that malleable jobs can be scheduled more efficiently
+
+\cite{cirne2001model}
+- most jobs on supercomputers are moldable
+- this means about 98\% of jobs run on supercomputers
+
+\cite{buisson2005framework}
+- note that using more resources in parallel decreases mean time between failures
+- the ability to adapt to such failures makes programs more resilient
+- require the program itself to make observations on the availability of resources

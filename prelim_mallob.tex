@@ -18,3 +18,11 @@ all from \cite{schreiber2021scalable}
 	- the volume of a job is proportional to $d_j p_j / \sum_{j'} d_{j'} p_{j'}$
 	- PEs of a job are arranged as a binary tree which is complete except for potentially the lowest layer (nodes from the right of the last layer may be missing)
 	- new nodes in a job are preferably taken from the list of suspended nodes of this job
+	
+now from \cite{sanders2022decentralized}
+- focus on (NP-)hard jobs with unknown processing time
+- the job itself can be small while still being hard
+
+according to \cite{feitelson1997job}
+- Mallob is the class of Malleable load balancer that tells the user when PEs may be taken away (on suspend!)
+- this increases complexity, but also allows us to react to such events

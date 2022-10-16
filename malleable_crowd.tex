@@ -1,4 +1,18 @@
+\subsection{Added Fault Tolerance}
+- as we have seen in section \ref{prelim: tohtn complexity}, TOHTN-planning is EXPSPACE-hard, as such we have to expect to run out of memory on any instance
+- in the past, this was not much of a practical problem, running out of memory simply meant that we were unable to find a plan
+- however, in the context of Mallob, we now want to solve more than one instance and specifically do not want the whole of Mallob to terminate just because a job ran into memory limits
+- luckily, Mallob provides a solution for this!
+- Mallob tells us on danger of memory panic and instructs us to reduce memory footprint
+- on this signal, we throw away half the fringe and also empty our loop detection mechanism
+- this costs us in both completeness and performance for at least this iteration (restarts anyone?), but that is still always strictly better than not having a result at all because of crashing
+
+\subsection{Rest of the Stuff}
+
 %\section{Malleable TOHTN Planning}
+- as mentioned by \cite{sanders2022decentralized}, upgrading a moldable to a malleable job is easy for portfolio solvers where a number of parallel but independent search strategies is involved
+- \cite{sanders2022decentralized}, the application itself is responsible to handle the removal/ addition of workers
+
 - upgrade from moldable to malleable task according to \cite{feitelson1997job} as introduced in section \ref{prelim: malleability}
 - we can no longer assume that messages always arrive and get a response
 - we want to achieve completeness
