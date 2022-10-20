@@ -12,7 +12,10 @@
 - both these approaches are structurally different and could thus be used to compliment each other
 - whether the better pruning would offset the increased runtime cost remains to be seen
 
-\subsection{Investigate the Completeness of Planners}
+\subsection{Advances runtime pruning techniques}
+In section \ref{improv: loops and completeness} we saw the problems with current loop detection techniques regarding (TO)HTN planner completeness. Specifically, loop detection in heuristic progression search suffers from recursive tasks which introduce additional new tasks which have to be resolved after the recursive task itself. At the same time, the PANDA planner has shown that heuristic progression search with loop detection is a promising approach with state of the art performance \cite{holler2020htn}, \cite{holler2021loop}. As a result, we propose that we take the notion of loop detection and expand it to a more generalized definition of dynamic pruning. In the past we were restricted to filtering out search nodes that are duplicates and as such already known. For future research, we could instead look at tasks sets and see whether they are still feasibly performing productive work. As an example take a task $t$ which recursively resolves into two new instances of $t$. Additionally, let $\mathcal{Q}_t$ be the set of predicates which may be changed as a result of resolving $t$. Then any sequence of $t$ which has length at least $2^{\mathcal{Q}_t}$ will necessarily perform duplicate work and any resolution which leads to an even longer sequence of $t$ needs not be explored. \\
+In this way, using improved dynamic pruning of unproductive task sequences may allow us to build planners which are both complete while at the same time realizing the performance gains seen in heuristic progression search.
+\begin{comment}
 - some planners are known to not be complete
 - some planners can easily be shown to be complete
 - we make a case in section \todo{Ref where we destroy our own heuristic and PANDA} that heuristic planners may not be complete
@@ -23,6 +26,9 @@
 - similarly it is not clear whether an algorithm like heuristic + plan length search gives us completeness in feasible time or more theoretically \todo{Compare with results once they arrive}
 - HyperTensioN, a decidedly non-complete planner is also the best-rated planner in the IPC 2020
 - maybe we need to have a full conversation on how much completeness we actually want/ need (or two separate categories of planners between 'HTN as a way to provide advice into planning domains \todo{quote Erol, I think?}' and 'HTN for the full power it provides')
+
+- new loop detection techniques leading to planner completeness
+\end{comment}
 
 \subsection{Lifted Parallel Search}
 - the Crowd way of performing relatively simple search does not work out in the end
