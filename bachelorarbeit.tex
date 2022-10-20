@@ -294,13 +294,18 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 - provide a foundation to discuss the effects of changes and improvements in the crowd planning framework
 
 \section{Implementation}
+- Mallob interface (Job)
+- all methods need to return fast
+- have a separate worker thread
+- where possible communicate via atomic bools, not locking
+\include{impl_mallob_integration}
 \include{impl_crowd_adaptions}
 \include{impl_crowd_improvements}
 
 \section{Theoretical Improvements to the Crowd Planner}
 \include{improv_search_algorithms}
 \include{improv_loop_detection}
-\include{improv_grounding_pruning}
+\include{improv_planner_completeness}
 
 \section{Malleability in the Context of CrowdHTN}
 communicating the problem at hand

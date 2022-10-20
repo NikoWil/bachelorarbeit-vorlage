@@ -134,6 +134,7 @@ The implementation of depth-first search used so far performs the search in a un
 In addition to the guided depth-first search, we also implemented an A-star like search where a node's value is the sum of the heuristic value and the number of applied reductions. We differ from A-star in that we terminate the search as soon as a plan has been found instead of continuing on the search for an optimal plan. The hope is that the heuristics guide us towards a plan while giving weight to the number of applied reductions forces us to turn back and explore other parts of the search space without getting lost in pathological cases.
 
 \subsubsection{Completeness of different Search Algorithms}
+\label{improv: search completeness}
 In the previous paragraphs we discussed a number of different search algorithms that we implemented for CrowdHTN and how we expect them to effect the performance characteristics of our planner. The search algorithm has a more fundamental impact than that, however, and may effect the property of completeness. In this section we want to give a short overview over the completeness of each of the algorithms. A short overview can be seen in table \ref{table: search completeness}. Note that this discussion is only about the algorithms without any modifications. In section \ref{improv: loop detection} we discuss loop detection mechanisms to improve those algorithms which are so far not listed as complete. \\
 \begin{table}
 	\caption{Completeness of the different search algorithms in CrowdHTN}

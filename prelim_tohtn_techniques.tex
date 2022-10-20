@@ -14,6 +14,7 @@ After that we will have a short discussion on lifted versus grounded approaches 
 \end{comment}
 
 \subsection{Translation-based} \todo{Title instead as "SAT-based"?}
+\label{prelim: translation based planners}
 One of the main techniques employed in HTN planning is to find an efficient encoding into a simpler problem. Two such problems are classical planning (\cite{alford2016bound}) and propositional logic (SAT). While translation to SAT was already proposed in 1998 (\cite{mali1998encoding}), the first complete encodings without assumptions about the instance were publicized in 2018 (\cite{behnke2018totsat}). In recent years, SAT seems to be the most popular problem to translate an HTN instance into, utilized by planners such as totSAT (\cite{behnke2018totsat}, \cite{behnke2018tracking}), Tree-REX (\cite{schreiber2019tree}) and Lilotane (\cite{schreiber2021lilotane}). \\
 As we have seen in the previous section \ref{prelim: tohtn complexity} on (TO)HTN complexity, (TO)HTN problems are in D-EXPTIME and undecidable respectively. Both classical planning and SAT are less powerful. As a result, HTN problems cannot be encoded and even for TOHTN problems we would suffer a blowup in the size of the instance. Instead, as noted in \cite{schreiber2019tree}, SAT-based planners tend to explore the set of potential hierarchies layer by layer, increasing the encoding size as they go. As a result, those SAT-based planners tend to have a BFS-like characteristic to their search.
 

@@ -1,6 +1,14 @@
 \subsection{Malleability}
 \label{prelim: malleability}
+In this work, we follow the classification of \cite{feitelson1997job} regarding parallel jobs. A job is \textbf{rigid} if it has a fixed number of required processing elements (PEs) which is hard-coded in the application. This number stays the same between runs. We call a job \textbf{moldable} if the number of PEs is variable and can be set at application start but remains fixed within any one run. An \textbf{evolving} job is one where the required number of PEs changes during execution and where these changes are initiated by the user. If the number of PEs changes during execution with the changes initiated externally, we call a job \textbf{malleable}.
+Malleability can be defined more generally as the ability to deal with changing resources, not only PEs \cite{sonmez2007scheduling}. In practise, we see that most jobs run on supercomputers follow the moldable model \cite{cirne2001model}. The moldable model is also supported by programming environments such as MPI \cite{hungershofer2004combined}. \\
+Systems that utilize malleable jobs have been shown to be highly efficient \cite{feitelson1997job}.
+They achieve this in multiple ways.
+First, they allow for efficient scheduling, as the scheduler can reevaluate and change previously made decisions \cite{sonmez2007scheduling}. This allows to resolve the conflict in scheduling between throughput and response latency, where low latencies come with the need to keep spare resources on hand instead of fully utilizing them \cite{feitelson1997job}, \cite{hungershofer2004combined}.
+Second, they allow applications to utilize additional resources as they become available, leading to improved performance \cite{hungershofer2004combined}. Lastly, \cite{buisson2005framework} make the case that malleable applications are more fault-tolerant which is of increasing importance as applications become more parallel. \\
+While malleable jobs are desirable from a scheduling and administration perspective, they are not popular with the user side, as they impose additional complications \cite{feitelson1997job}. The effort required to make any one application malleable varies depending on the problem. In case the problem at hand is easily split into independent small subtasks, we can use a central work queue from which other PEs can receive new tasks as needed \cite{feitelson1997job}, \cite{tucker1989process}. This approach allows us to redistribute PEs to other jobs in between tasks. It is however limited by the central work queue which tends to be a bottleneck. Alternatively, in data driven applications, we may have distributed data structures that are redistributed as the number of available PEs changes \cite{feitelson1997job}. This is more complicated, though, and is an expensive operation which should not be performed too often. To sum it up, making an application malleable is highly dependent on the specific problem and only easy in cases that are trivial to parallelize.
 
+\begin{comment}
 \cite{feitelson1997job} gives us a classification of parallel jobs
 - rigid: jobs which have a fixed number of required processors, this number stays fixed across iterations
 - moldable: jobs which require the number of processors to be fixed during execution, but may run on any number
@@ -13,16 +21,16 @@ In evolving jobs, the different number is set by the job, in malleable jobs the 
 - malleability is less convenient for application writers, as it exposes them to the variation in available resources
 
 - efficiency:
-	- if we are not malleable we face a choice of either leaving PEs unassigned (and underutilized!), reducing throughput
-	- or alternatively we may fully utilize all PEs, worsening latencies for new jobs
-	
+- if we are not malleable we face a choice of either leaving PEs unassigned (and underutilized!), reducing throughput
+- or alternatively we may fully utilize all PEs, worsening latencies for new jobs
+
 - they propose models to make malleability work on the application side: work pile
-	- multiple independent cores get their task from the pile of work, independently and in unknown order
-	- PEs may be reassigned to a different job in between tasks
+- multiple independent cores get their task from the pile of work, independently and in unknown order
+- PEs may be reassigned to a different job in between tasks
 - problems:
-	- the central work queue is a bottleneck
-	- what do we do if we want to reassign a PE in the middle of a task?
-	
+- the central work queue is a bottleneck
+- what do we do if we want to reassign a PE in the middle of a task?
+
 - alternatively we can redistribute our data structures upon changing number of PEs
 - this is an expensive operation and should be done as little as possible!
 
@@ -49,3 +57,4 @@ In evolving jobs, the different number is set by the job, in malleable jobs the 
 - note that using more resources in parallel decreases mean time between failures
 - the ability to adapt to such failures makes programs more resilient
 - require the program itself to make observations on the availability of resources
+\end{comment}

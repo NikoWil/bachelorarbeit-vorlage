@@ -107,25 +107,6 @@ taking preconditions of tasks and lifting them up into methods
 Only do this if the precondition is guaranteed to also apply to the method (cannot be achieved before the respective task?)
 This allows us to stop exploring paths earlier
 
-\subsection{Global and Memory Efficient Loop Detection}
-So far: each worker has a hash set of each node ever encountered (note: we define node equality through the sequence of open tasks and the set of predicates that is the world state. Depth in the graph and preceding plan are ignored)
-Advantages: allows for perfect local loop detection, as we can always fall back to equality checks in case of hash collisions.
-Problems: This approach leads to a massive memory overhead, as the world state is duplicated countless times. This also leads to increased run times just to manage the growing hash set.
-This is also not suited for global loop detection. Global loop detection would need some mechanism to communicate seen nodes. Nodes are too large to communicate all of them, though. If we only communicate some nodes instead of all we run the risk of a node "going past" that barrier of known nodes and still exploring the swathes of known nodes beyond the "barrier"
-TODO: what about open tasks (memory consumption)? Or was that an ImmutableStack with little overhead?
-
-Idea: drop the precondition of perfect loop detection with no false positives.
-For loop detection use a bloom filter with a set of hash functions for search nodes.
-This comes with a fixed, configurable memory overhead per worker. As a result, overall memory consumption should
-- drop
-- be more predictable
-To communicate nodes we can just communicate the bit array that makes up our filter and combine them via bitwise OR. This ensures that communication volume is also fixed. It is independent of both size of nodes (i.e. length of open tasks sequence) and number of explored nodes (since last round of communication).
-In addition to communicating the bloom filter we communicate the number of newly added nodes. Then each worker knows an upper bound for the total number of nodes that are part of it's bloom filter (might be an overestimation if two workers insert identical nodes as the node would be counted twice). As bloom filter performance/ false positives degrade with the number of elements inside it, we can restart our work depending on the number of elements in the bloom filter.
-
-- loop detection information is shared at most every second (or however long it takes for the communication to complete)
-- as a result, when the root node increases it's version, a broadcast is started that communicates the new version to everyone else
-- the version in normal messages is still kept. In case a message arrives before the version broadcast, the version is increased even earlier. New nodes likely get their version with the first work package.
-
 \subsubsection{Restarts Under Loop Detection}
 - bloom filters are of fixed size. If we propose a maximum false-positive rate, they will fill up at some point
 - this necessitates the need for restarts

@@ -1,24 +1,39 @@
-\subsection{The Mallob Scheduler}
+\subsection{Mallob}
 \label{prelim: mallob}
+Mallob is both the \textbf{Ma}lleable \textbf{Lo}ad \textbf{B}alancer and the \textbf{M}ulti-tasking \textbf{A}gi\textbf{l}e \textbf{Lo}gic \textbf{B}lackbox \cite{schreiber2021scalable}.
+Mallob provides a malleable scheduler which focuses on (NP-)hard jobs with unknown processing times, where the jobs themselves can be small while still being hard \cite{sanders2022decentralized}.
+
+\todo{}
+In this it focuses on the problem of propositional logic (SAT).
+- won multiple prices in the international SAT competition
+- Mallob has been referred to as “by a wide margin, the most powerful SAT solver on the planet”
+
+The following overview of Mallob is taken from \cite{schreiber2021scalable}.
+Mallob is a decentralized, distributed malleable job scheduler and load balancer. Being distributed, it does not assume any shared memory and instead has the different workers communicate via message passing.
+As a scheduler it is able to solve multiple jobs in parallel and adjusts the resources available per job on a dynamic basis. New jobs $j$ can be introduced to Mallob at any times and are described by a number of attributes. Among those, each job has a fixed \textit{priority} $p_j \in (0, 1)$. Additionally, each job has a variable resource \textit{demand} $d_j \in \mathbb{N}$, describing the maximum number of PEs that job $j$ is able to utilize efficiently. In the trivial case, assuming jobs only happen one after the other, each job can simply set $d_j$ to the total number of available PEs. When it comes to the total number of active jobs at any one time, Mallob assumes that their number is lower than the total number of PEs. This allows Mallob to assign each PE to only a single job at a time while still making progress on all active jobs. The total number of PEs assigned to a job is also called the job's \textit{volume} $v_j$. The volume of each job is set proportional to $d_j p_j / \sum_{j'} d_{j'} p_{j'}$, i.e., proportional to the product of a job's demand and priority.\\
+The $v_j$ workers currently assigned to a job are internally organized as a binary tree, s.t. all levels except the last one of the tree are always full and the last level is filled from left to right. If a PE is taken away from a job, the associated data is not immediately deleted. Instead, a small and constant number of previous jobs is kept around. When the volume $v_j$ grows again, PEs containing a suspended worker of the same job are preferred to increase efficiency.
+
+\begin{comment}
 all from \cite{schreiber2021scalable}
 - Mallob - \textbf{Ma}lleable \textbf{Lo}ad \textbf{B}alancer or \textbf{M}ulti-tasking \textbf{A}gi\textbf{l}e \textbf{Lo}gic \textbf{B}lackbox
 - Mallob contains a parallel SAT solver
+- scales up to 2000 cores
 - is able to solve multiple instances in parallel, adjusting resources per job on a dynamic basis
 - is a decentralized malleable job scheduler
 - there is no shared RAM, communication via message passing
 - jobs $j$ can arrive at arbitrary times
-	- for SAT: a logic formula in Conjunctive Normal Form (CNF)
-	- each job $j$ has a constant priority $pi_j \in (0, 1)$
-	- each job $j$ has a variable (over time) resource demand $d_j \in \mathcal{N}$
-		- simple case: $d_j$ is the number of available PEs
-	- $d_j$ allows a job how many resources it is able to utilize at most
-	- Mallob expects the number of active jobs to be lower than the number of workers, i.e. that $d_j > 1$
-		- each PE works on only one job at a time
-	- the first PE assigned to a job $j$ is its root and is fixed over the lifetime of the job
-	- the volume of a job is proportional to $d_j p_j / \sum_{j'} d_{j'} p_{j'}$
-	- PEs of a job are arranged as a binary tree which is complete except for potentially the lowest layer (nodes from the right of the last layer may be missing)
-	- new nodes in a job are preferably taken from the list of suspended nodes of this job
-	
+- for SAT: a logic formula in Conjunctive Normal Form (CNF)
+- each job $j$ has a constant priority $pi_j \in (0, 1)$
+- each job $j$ has a variable (over time) resource demand $d_j \in \mathcal{N}$
+- simple case: $d_j$ is the number of available PEs
+- $d_j$ allows a job how many resources it is able to utilize at most
+- Mallob expects the number of active jobs to be lower than the number of workers, i.e. that $d_j > 1$
+- each PE works on only one job at a time
+- the first PE assigned to a job $j$ is its root and is fixed over the lifetime of the job
+- the volume of a job is proportional to $d_j p_j / \sum_{j'} d_{j'} p_{j'}$
+- PEs of a job are arranged as a binary tree which is complete except for potentially the lowest layer (nodes from the right of the last layer may be missing)
+- new nodes in a job are preferably taken from the list of suspended nodes of this job
+
 now from \cite{sanders2022decentralized}
 - focus on (NP-)hard jobs with unknown processing time
 - the job itself can be small while still being hard
@@ -26,3 +41,4 @@ now from \cite{sanders2022decentralized}
 according to \cite{feitelson1997job}
 - Mallob is the class of Malleable load balancer that tells the user when PEs may be taken away (on suspend!)
 - this increases complexity, but also allows us to react to such events
+\end{comment}
