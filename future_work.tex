@@ -43,3 +43,8 @@ In this way, using improved dynamic pruning of unproductive task sequences may a
 - we have decided to stay with CrowdHTN's way of performing grounding on-demand and just in time, as it lends itself particularly well to a malleable environment
 - specifically, having to perform a big chunk of work that is not yet possible to lead to a plan would impose a problem on the efficiency of new and short-lived workers
 - in a shared-memory environment, this could be done once by the root and then re-used by other workers, making better pruning and heuristics such as in PANDA available
+
+\subsection{Global Loop Detection}
+- we show how a global loop detection mechanism in (TO)HTN planning could work
+- so far, we use a very simple heuristic (encounter a node twice) for which nodes to share
+- more intelligent heuristics are probably helpful

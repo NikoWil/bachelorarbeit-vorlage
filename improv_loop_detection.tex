@@ -71,23 +71,85 @@ In case of distributed loop detection, communicating full states would lead to a
 	- however, it is a useful benchmark as to how many loops we *should* expect
 \end{comment}
 
-\subsubsection{Statistical Loop Detection}
+\subsubsection{Approximate Loop Detection}
 \todo{Approximate Membership Queries}
 \todo{Write about why a quotient filter is not the solution! (or at least why it was not chosen)}
 
 \paragraph{Approximate membership queries}
-- efficient merging is possible
-- communication is size efficient (especially does not depend on the number of workers!)
+- we drop the assumption of perfection
+- allow either false positives or false negatives
+- in our case false positives (i.e. only 'definitely not in filter' or 'probably in filter')
+- the data structure we search is called approximate membership query
+- bloom filters and quotient filters are two examples of this
+- bloom filters use $k$ hash functions and set corresponding bits
+- more compact representation of the whole thing
+- checking for membership in O(1) instead of O(number of open tasks + world state size)
+
+- expanding bloom filters allow us to mostly keep performance while allowing arbitrary size
+- double size each time the filter is full
+
+- detailed explanation of bloom filter
 
 \paragraph{Completeness in the face of false positives}
-- we loose completeness 
+- false positives mean we loose completeness
+- i.e. if we perform progression search and $p = p_0, \ldots, p_n$ defines a path of search nodes from initial node to goal
+- then for any $p_i$ in $p$, search nodes $p_0, \ldots, p_{i-1}$ may collectively set the $k$ hashes produced by $p_i$, filtering it out
+- the chance of all paths to a goal node being filtered out as false positives only increases with each path we wrongly explore
+- overall, we loose completeness
 
-- go back to something like HyperTensioN, accepting some false positive rate
-- approximate membership query 
-- we get either 'definitely contained'
-- or 'maybe contained'
-- examples are bloom filter and quotient filter
+- one way to get completeness back: restarts while changing the seeds of the hash function
+- assuming perfect hashing, for different seeds our hashes are completely uncorrelated
+- as the number of restarts increases, the chance of encountering a false positive on the path start - goal every single time goes to zero
+- only an infinite number of restarts as runtime goes to infinity does guarantee us this property
+- we need arbitrarily long runs in between restarts, as plans may be arbitrarily long
+	- to be precise, we could limit plan length by the combination of maximum depth before a plan must exist (if it does at all) and maximum expansion factor (i.e. max. number of children of any task)
+	- simply allowing runs of any length simplifies the implementation, though
+- we choose to check for a restart each second and, at second $t$, do it with probability $1 / t$
+- for expected number of restarts we get $\sum_{t=1}^{\infty} \frac{1}{t}$
+	- this is a geometric series which diverges
+	- average time between restarts increases as time progresses
+	- both properties are what we want!
 
+
+\paragraph{Global Loop Detection}
+- normal loop detection gets worse in distributed (TO)HTN planning
+- each worker tracks it's own set of known nodes
+- if worker $w_1$ encounters a node, workers $w_2, \ldots, w_n$ will not filter that node out until they've encountered it themselves at least once
+
+- we try to find a way to perform global loop detection
+
+- bloom filters have additional advantages:
+	- smaller size makes them efficient to communicate
+	- also, encoding and decoding for communication is trivial as the filter consists of a simple bit vector
+	- bloom filters can be merged efficiently via bitwise operations
+- bloom filters are shared between all workers by regularly performing a distributed reduction operation with a subsequent broadcast afterwards
+- this takes logarithmic number of steps in the number of workers
+- this gives us some global loop detection capabilities back
+- we approximate the number of search nodes contained in the global filter as the sum of nodes in our communicated filters, this gives us a conservative upper bound which guarantees that our bounds for false positives are not violated
+
+- we need to adjust our bloom filter behavior for this case
+- locally we used expanding bloom filters, this is easy
+- distributed, this is difficult
+	- our workers may not be alive for equivalent time spans
+	- as a result, the number of nodes in our shared global filter may vary between nodes
+	- having a filter consist of differently sized sub-filters as in expanding bloom filters would complicate things here
+	- workers with differently filled filters may disagree about the size filter into which to put a new search node
+	- the implementation would get more complicated
+	- also, we may loose our guarantees about false positives as our different workers will independently fill their filters and then combine them, producing a new filter that may contain more search nodes than permitted
+	
+	- so instead, when the global filter is full (aka false positive chance is too high), we force another restart
+	- for this, we also double the size of our global filter, to limit the number of restarts that happen
+	- and also allow arbitrarily long plans
+- the root worker can control the restarts
+- we know that the root is always alive for the whole duration of the job
+- aka the root is guaranteed to partake in every single exchange of loop detection information
+- aka the root's global filter is always at least as full as every other worker's filter
+- so the root can do this independently, simplifying our implementation
+
+- to not let the number of restarts take over, we also want to limit our global loop detection to important search nodes
+- for now, we define important as encountering a search node which we've encountered before
+
+\begin{comment}
 Quotient filter:
 - do we need the original elements to re-insert them?
 - do we need to communicate whole hashes to combine filters? (worse communication size!)
@@ -102,9 +164,4 @@ Advantages:
 - this means we wildly jump through memory for hashing, adding another constant factor
 - we could save on this constant factor by duplicating the open tasks for each node and saving them sequentially, but leading to a lot higher memory footprint (might be quadratic compared to what it is already (if any fixed fraction of nodes have at least 2 children, maybe? \todo{some math}))
 - compromise between performance and false-positive rate (better for correctness than just comparing a single hash)
-
-\subsubsection{Distributed Loop Detection}
-- two new considerations
-	- memory footprint becomes more important for communication (effectively an all-to-all operation -> quote Sanders' book!)
-	- efficient merge of loop detection data is needed
-- communicating everything might still be inefficient for bloom filters ()
+\end{comment}
