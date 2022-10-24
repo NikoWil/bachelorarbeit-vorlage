@@ -12,7 +12,7 @@ This section will discuss loop detection as it is used in (TO)HTN planning in ge
 - \cite{magnaguagno2020hypertension} domains can have introduce infinite loops, without some kind of loop detection we loose completeness (and performance)
 
 
-\subsubsection{Loop Detection in Other HTN Planners}
+\subsubsection{Loop Detection in Other (TO)HTN Planners}
 \label{ld - history others}
 Loop detection in HTN planning is a recent phenomenon and was introduced in 2020 by the HyperTensioN planner (\cite{magnaguagno2020hypertension}) with the so-called 'Dejavu' technique. Dejavu works by extending the planning problem, introducing primitive tasks and predicates that track and identify when a particular recursive compound task is being decomposed. These new primitive tasks are invisible to the user. Information about recursive tasks is stored externally to the search as to not loose it during backtracking. Dejavu comes with performance advantages and protects against infinite loops. However, as Dejavu only concerns itself with information about the task network but ignores the world state it may have false positives. This was also noted by \cite{holler2021loop} and means that HyperTensioN is not complete. \cite{holler2021loop} further nodes that the loop detection is limited in that it only finds loops in a single search path but cannot detect if multiple paths lead to equivalent states. \\
 In response to \cite{magnaguagno2020hypertension}, loop detection was introduced to the PANDA planner in \cite{holler2021loop}. Similar to HyperTensioN, PANDA keeps it's loop detection information separate in a list of visited states, $\mathcal{V}$. Search nodes, identified by a tuple $(s, tn)$ of world state $s$ and task network $tn$, are only added to the fringe if they are not contained in $\mathcal{V}$. To speed up comparisons, $\mathcal{V}$ is separated into buckets according to a hash of $s$. To then identify whether $tn \in \mathcal{V}[s]$ multiple algorithms are proposed. In the sub-case of TOHTN planning, both an exact comparison of the sequence of open tasks as well as an order-independent hash of the open tasks, called \textit{taskhash} are used. Similar to HyperTensioN, using a hash to identify equal task networks can lead to false positives and an incomplete planner. Both hashing-based and direct comparison as used in PANDA have a performance cost linear in the size of $tn$. The loop detection in PANDA improves upon the one in HyperTensioN insofar as it is able to detect loops where equivalent states where reached independently.
@@ -54,10 +54,10 @@ Both PANDA and HyperTensioN are sequential planners whereas CrowdHTN is highly p
 \end{comment}
 
 \subsubsection{Perfect Loop Detection}
+\label{ld - perfect loop detection}
 One simple way to perform loop detection which is similarly used in PANDA (\cite{holler2021loop}) is to use a hashset of visited states. The implementation in Crowd is slightly different from PANDA in that we use one combined hash for both world state and open tasks. Other than PANDA, CrowdHTN does incorporate the order of tasks into the hash, which should reduce collisions and makes the two levels of hashing less needed. \\
 Using hashes combined with a full comparison provides us a perfect loop detection, i.e., neither false positives nor false negatives exist. This makes it a useful technique to benchmark other loop detection methods. However, both in the sequential and in the distributed case this technique suffers from performance problems. \\
 In case of hash collisions, we have to fall back to a full comparison of world state $s$ and open tasks $tn$. While $s$ is bound in size by the total number of predicates, the size of $tn$ is effectively unbound \todo{quote about max. exponential depth!}. Additionally, we have to keep both $s$ and $tn$ around for all nodes ever encountered, increasing the memory footprint of our program.
-In case of distributed loop detection, communicating full states would lead to a large communication overhead. Especially, we can expect each node to be larger than those sent as work packages, as those are optimized to have a small $tn$ which would not hold for nodes encountered in our loop detection.
 \begin{comment}
 	- Additionally, there is the full comparison for the world state
 	- in practise this can be a problem, at the same time asymptotically it should not matter as it will be dwarfed by the 
@@ -68,7 +68,7 @@ In case of distributed loop detection, communicating full states would lead to a
 	- however, it is a useful benchmark as to how many loops we *should* expect
 \end{comment}
 
-\subsubsection{Approximate Loop Detection}
+\subsubsection{TODO: Approximate Loop Detection}
 - so far: loop detection is perfect
 - what if we drop this assumption of no false positives?
 - short overview over AMQ data structures
@@ -77,7 +77,7 @@ In case of distributed loop detection, communicating full states would lead to a
 \todo{Approximate Membership Queries}
 \todo{Write about why a quotient filter is not the solution! (or at least why it was not chosen)}
 
-\paragraph{Approximate membership queries}
+\paragraph{TODO: Approximate membership queries}
 - we drop the assumption of perfection
 - allow either false positives or false negatives
 - in our case false positives (i.e. only 'definitely not in filter' or 'probably in filter')
@@ -86,6 +86,10 @@ In case of distributed loop detection, communicating full states would lead to a
 - bloom filters use $k$ hash functions and set corresponding bits
 - more compact representation of the whole thing
 - checking for membership in O(1) instead of O(number of open tasks + world state size)
+
+- bloom filter:
+- $m$ bits in the array, $k$ hash functions, $n$ elements contained
+- 
 
 - expanding bloom filters allow us to mostly keep performance while allowing arbitrary size
 - while also keeping the false positive probability in check
@@ -127,34 +131,52 @@ This mechanism allows us to restore completeness to our planner while utilizing 
 \end{comment}
 
 \paragraph{Global Loop Detection}
+In the previous section \ref{ld - tohtn simplifications} we already mentioned that loop detection in distributed (TO)HTN planning comes with unique problems. Specifically, current loop detection techniques do not include ways to efficiently share the loop detection information between PEs. As a result, a search node is only fully filtered out once each worker has encountered it at least once. This is less of a problem for recursive tasks which are quickly re-encountered by our search and subsequently filtered out. It does however loose us the ability to discover when different paths lead to equivalent nodes in which case we want to avoid duplicate work. To address this issue, we will start with a short discussion on how previous loop detection mechanisms are hard to adapt for the distributed case and then show how we implement distributed loop detection on the basis of bloom filters. \\
+As mentioned in section \ref{ld - perfect loop detection} on current loop detection mechanisms, they do suffer from a high memory footprint as we keep whole search nodes around. This problem extends to the distributed case, as we would now have to communicate whole search nodes leading to a large message overhead. Even if we assume the communication overhead to be low enough, we run into additional problems. Inserting $n$ elements into a hashset takes $\mathcal{O}(n)$ time. The higher the number of PEs, the more time would be spent on inserting search nodes received from other PEs which would either block us from performing search for large amounts of time or introduce synchronization problems. As a result, we have decided that it is infeasible to extend this loop detection mechanism to the distributed case. \\
+\todo{we also implemented mechanisms to save on memory by sharing data between nodes. Additional encoding and decoding overhead!}
+\begin{comment}
+- insertion of $n$ search nodes is expensive
+- encoding and decoding becomes more difficult, especially
+
+
+- previous section \ref{ld - tohtn simplifications} mentions that distributed planning makes loop detection less efficient
+- recursion is still fine
+- different paths leading to equivalent nodes are no longer detected
+
 - normal loop detection gets worse in distributed (TO)HTN planning
 - each worker tracks it's own set of known nodes
 - if worker $w_1$ encounters a node, workers $w_2, \ldots, w_n$ will not filter that node out until they've encountered it themselves at least once
 
 - we try to find a way to perform global loop detection
-
+\end{comment}
+Compared to hash sets, loop detection based on bloom filters offers a number of advantages for distributed loop detection. First, bloom filters offer a more compact representation of the already encountered nodes which leads to a lower communication overhead. Second, as the filter itself is stored as a simple bit vector, we have negligible overhead regarding encoding and decoding for communication. Thirdly, the merging operation of two bloom filters is very efficient. To merge two bloom filters, we perform a simple bitwise or operation of the bit vectors. In a combined filter, we get a conservative upper bound for the total number of contained elements by adding the number of elements of both filters. This guarantees that our maximum rate of false positives is not exceeded. \\
+\begin{comment}
 - bloom filters have additional advantages:
-	- smaller size makes them efficient to communicate
-	- also, encoding and decoding for communication is trivial as the filter consists of a simple bit vector
-	- bloom filters can be merged efficiently via bitwise operations
+- smaller size makes them efficient to communicate
+- also, encoding and decoding for communication is trivial as the filter consists of a simple bit vector
+- bloom filters can be merged efficiently via bitwise operations
 - bloom filters are shared between all workers by regularly performing a distributed reduction operation with a subsequent broadcast afterwards
 - this takes logarithmic number of steps in the number of workers
 - this gives us some global loop detection capabilities back
 - we approximate the number of search nodes contained in the global filter as the sum of nodes in our communicated filters, this gives us a conservative upper bound which guarantees that our bounds for false positives are not violated
-
+\end{comment}
+To integrate bloom filters into our distributed loop detection, we also need to address the question of what to do in case the global filter gets filled up, i.e. it's false positive rate reaches our set limit. For the local case, we introduced expanding bloom filters.
+This is a problem as we now communicate whole sets of search nodes whereas locally we introduce new search nodes into the filter one by one, increasing the size at exactly the right moment. As a result, we face the choice of either throwing away some information or loosing our guarantees regarding false positives. Similarly, we face the problem where different PEs may disagree about the current maximum size of the expanding bloom filter, putting more information in a smaller filter that will be thrown away by other PEs. \\
+To deal with this problem, we induce a restart in our search upon filling our global filter. As the restart mechanism is already present due to the need to deal with false positives this is an easy adaption. To limit the number of needed restarts and once again allow arbitrarily long runs, we double the size of our global filter with each restart. This limits the number of restarts needed and increases the time between subsequent loop detection induced restarts, once again allowing for arbitrarily long runs to preserve completeness of our planner. Additionally, we limit the amount of information present in our filter to further reduce the number of restarts we need. We achieve this by only putting 'important' search nodes into our filter. Our heuristic to determine search node importance is to put a node into our global filter if it is present in our local filter and encountered again. Other heuristics are possible but beyond the scope of this thesis.
+\begin{comment}
 - we need to adjust our bloom filter behavior for this case
 - locally we used expanding bloom filters, this is easy
 - distributed, this is difficult
-	- our workers may not be alive for equivalent time spans
-	- as a result, the number of nodes in our shared global filter may vary between nodes
-	- having a filter consist of differently sized sub-filters as in expanding bloom filters would complicate things here
-	- workers with differently filled filters may disagree about the size filter into which to put a new search node
-	- the implementation would get more complicated
-	- also, we may loose our guarantees about false positives as our different workers will independently fill their filters and then combine them, producing a new filter that may contain more search nodes than permitted
-	
-	- so instead, when the global filter is full (aka false positive chance is too high), we force another restart
-	- for this, we also double the size of our global filter, to limit the number of restarts that happen
-	- and also allow arbitrarily long plans
+- our workers may not be alive for equivalent time spans
+- as a result, the number of nodes in our shared global filter may vary between nodes
+- having a filter consist of differently sized sub-filters as in expanding bloom filters would complicate things here
+- workers with differently filled filters may disagree about the size filter into which to put a new search node
+- the implementation would get more complicated
+- also, we may loose our guarantees about false positives as our different workers will independently fill their filters and then combine them, producing a new filter that may contain more search nodes than permitted
+
+- so instead, when the global filter is full (aka false positive chance is too high), we force another restart
+- for this, we also double the size of our global filter, to limit the number of restarts that happen
+- and also allow arbitrarily long plans
 - the root worker can control the restarts
 - we know that the root is always alive for the whole duration of the job
 - aka the root is guaranteed to partake in every single exchange of loop detection information
@@ -163,6 +185,7 @@ This mechanism allows us to restore completeness to our planner while utilizing 
 
 - to not let the number of restarts take over, we also want to limit our global loop detection to important search nodes
 - for now, we define important as encountering a search node which we've encountered before
+\end{comment}
 
 \begin{comment}
 Quotient filter:
