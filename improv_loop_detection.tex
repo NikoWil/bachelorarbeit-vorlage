@@ -16,7 +16,6 @@ This section will discuss loop detection as it is used in (TO)HTN planning in ge
 \label{ld - history others}
 Loop detection in HTN planning is a recent phenomenon and was introduced in 2020 by the HyperTensioN planner (\cite{magnaguagno2020hypertension}) with the so-called 'Dejavu' technique. Dejavu works by extending the planning problem, introducing primitive tasks and predicates that track and identify when a particular recursive compound task is being decomposed. These new primitive tasks are invisible to the user. Information about recursive tasks is stored externally to the search as to not loose it during backtracking. Dejavu comes with performance advantages and protects against infinite loops. However, as Dejavu only concerns itself with information about the task network but ignores the world state it may have false positives. This was also noted by \cite{holler2021loop} and means that HyperTensioN is not complete. \cite{holler2021loop} further nodes that the loop detection is limited in that it only finds loops in a single search path but cannot detect if multiple paths lead to equivalent states. \\
 In response to \cite{magnaguagno2020hypertension}, loop detection was introduced to the PANDA planner in \cite{holler2021loop}. Similar to HyperTensioN, PANDA keeps it's loop detection information separate in a list of visited states, $\mathcal{V}$. Search nodes, identified by a tuple $(s, tn)$ of world state $s$ and task network $tn$, are only added to the fringe if they are not contained in $\mathcal{V}$. To speed up comparisons, $\mathcal{V}$ is separated into buckets according to a hash of $s$. To then identify whether $tn \in \mathcal{V}[s]$ multiple algorithms are proposed. In the sub-case of TOHTN planning, both an exact comparison of the sequence of open tasks as well as an order-independent hash of the open tasks, called \textit{taskhash} are used. Similar to HyperTensioN, using a hash to identify equal task networks can lead to false positives and an incomplete planner. Both hashing-based and direct comparison as used in PANDA have a performance cost linear in the size of $tn$. The loop detection in PANDA improves upon the one in HyperTensioN insofar as it is able to detect loops where equivalent states where reached independently.
-
 \begin{comment}
 - loop detection in HTN planning is relatively new, being introduced by \cite{magnaguagno2020hypertension} and \cite{holler2021loop}
 - multiple other planners do perform loop detection
@@ -46,15 +45,13 @@ While both PANDA and HyperTensioN are HTN planners, CrowdHTN concerns itself onl
 \todo{refer to the implementation part where the open tasks are represented as a sequence} \\
 Crowd identifies search states as a tuple of $(s, tn)$ of world state $s$ and task network $s$, similar to PANDA and uses hashing to efficiently identify duplicate search states. As tasks of equivalent task networks are always in the same order, we can incorporate that order into our hash of $tn$ to reduce the number of collisions compared to PANDA's \textit{taskhash}. This will increase performance where we fall back to comparisons in case of collisions and reduce our false-positive rate in case we use probabilistic loop detection. 
 \todo{Refer to the implementation and how we reduce hashing to O(1) time} \\
-Both PANDA and HyperTensioN are sequential planners whereas CrowdHTN is highly parallel. This adds an additional design constraint to our loop detection. If we want to efficiently share information about visited states using the full state information becomes infeasible as those full states would have to be communicated. If we perform loop detection only locally, we predict to suffer from decreased performance the higher the degree of parallelism. I.e., if two branches of our search tree contain the same search node, the chance that those two branches are encountered on different processors is higher the more processors we have.
+Both PANDA and HyperTensioN are sequential planners whereas CrowdHTN is highly parallel. This adds an additional design constraint to our loop detection. If we want to efficiently share information about visited states using the full state information becomes infeasible as those full states would have to be communicated. If we perform loop detection only locally, we expect to suffer from decreased performance the higher the degree of parallelism. I.e., if two branches of our search tree contain the same search node, the probability that those two branches are encountered on different processors is higher the more processors we have.
 \begin{comment}
 	- keep the part where we store loop detection information externally
 	- be sure we can always assume total order (and keep the ordering information to reduce false-positive rate!)
 	- keep completeness of the planner
 	- improve on the performance for hashing!
-	- 
 \end{comment}
-
 
 \subsubsection{Perfect Loop Detection}
 One simple way to perform loop detection which is similarly used in PANDA (\cite{holler2021loop}) is to use a hashset of visited states. The implementation in Crowd is slightly different from PANDA in that we use one combined hash for both world state and open tasks. Other than PANDA, CrowdHTN does incorporate the order of tasks into the hash, which should reduce collisions and makes the two levels of hashing less needed. \\
@@ -72,6 +69,11 @@ In case of distributed loop detection, communicating full states would lead to a
 \end{comment}
 
 \subsubsection{Approximate Loop Detection}
+- so far: loop detection is perfect
+- what if we drop this assumption of no false positives?
+- short overview over AMQ data structures
+- explore the implications on completeness
+- how does this help us with distributed loop detection?
 \todo{Approximate Membership Queries}
 \todo{Write about why a quotient filter is not the solution! (or at least why it was not chosen)}
 
@@ -86,11 +88,24 @@ In case of distributed loop detection, communicating full states would lead to a
 - checking for membership in O(1) instead of O(number of open tasks + world state size)
 
 - expanding bloom filters allow us to mostly keep performance while allowing arbitrary size
+- while also keeping the false positive probability in check
 - double size each time the filter is full
 
 - detailed explanation of bloom filter
 
 \paragraph{Completeness in the face of false positives}
+While using approximate membership queries as described in the previous paragraph gives us a number of advantages, it also introduces a new set of challenges. Among these is the fact that false positives become a possibility. As a result, we can expect to wrongfully cut off parts of our search space. More specifically, if we perform progression search using bloom filters and $n = n_1, \ldots, n_l$ is a path of length $l$ from our initial search node to a goal search node, then for any $n_i$ in $n$, the search nodes $n_1, \ldots, n_{i-1}$ may collectively set the $k$ hashes associated with $n_i$, filtering it out. This may end up turning a (TO)HTN problem unsolvable for us even though a plan exists. As a result, our planner, if otherwise unchanged, will no longer be complete. \\
+We will now take a closer look at the probabilities involved. Assuming we use an expanding bloom filter with maximum false positive rate $p < 1$ and a hash function which maps search nodes to uniformly independent values. Let us further assume we perform progression search on a solvable (TO)HTN problem where the shortest path from start to goal is of length $l$. Then $(1 - p)^l < 1$ is an upper bound on the probability that we are unable to solve the problem even though a solution exists. \\
+From this we see that $\lim_{l \rightarrow \infty} (1 - p)^l \rightarrow 0$. That is, if keep re-running our search with new, independent hash functions we regain completeness. It is critical to use independent hash functions between runs to ensure that false positives in different runs are not correlated with each other. In the next step we need to determine when ot re-run our planner. There are three main constraints.
+\begin{enumerate}
+	\item As the (TO)HTN instance may be recursive, the search space may be infinite
+	\item The number of restarts needs to be unbounded as run time goes to infinity
+	\item As a plan may be arbitrarily long, the number of runs with run time at least $t$ needs to be infinite
+\end{enumerate}
+Constraint one implies that we cannot simply wait until we explore the whole search space before restarting. Instead we will base our restarts on total run time so far. To fulfill constraints two and three, we perform a check every second where after $t$ seconds we perform a restart with probability $\frac{1}{t}$. \\
+For the total number of restarts we end up with $\sum_{t = 1}^\infty \frac{1}{t}$. This is the harmonic series and diverges, giving us the required unbounded number of restarts. As $t$ grows, the probability of restarts decreases, allowing for increasingly long runs, fulfilling the third constraint. \\
+This mechanism allows us to restore completeness to our planner while utilizing approximate loop detection. Restarts may prove to have additional benefits to planner performance, as DFS-based planners tend to be hit-or-miss where restarts increase the number of opportunities for a hit. We do note that approximate loop detection does come at the cost of no longer being able to detect UNPLAN, as we can never guarantee that we explored the full search space. In practice, we do not expect this to matter as the search space of (TO)HTN problems tends to be too big to feasibly fully explore.
+\begin{comment}
 - false positives mean we loose completeness
 - i.e. if we perform progression search and $p = p_0, \ldots, p_n$ defines a path of search nodes from initial node to goal
 - then for any $p_i$ in $p$, search nodes $p_0, \ldots, p_{i-1}$ may collectively set the $k$ hashes produced by $p_i$, filtering it out
@@ -102,14 +117,14 @@ In case of distributed loop detection, communicating full states would lead to a
 - as the number of restarts increases, the chance of encountering a false positive on the path start - goal every single time goes to zero
 - only an infinite number of restarts as runtime goes to infinity does guarantee us this property
 - we need arbitrarily long runs in between restarts, as plans may be arbitrarily long
-	- to be precise, we could limit plan length by the combination of maximum depth before a plan must exist (if it does at all) and maximum expansion factor (i.e. max. number of children of any task)
-	- simply allowing runs of any length simplifies the implementation, though
+- to be precise, we could limit plan length by the combination of maximum depth before a plan must exist (if it does at all) and maximum expansion factor (i.e. max. number of children of any task)
+- simply allowing runs of any length simplifies the implementation, though
 - we choose to check for a restart each second and, at second $t$, do it with probability $1 / t$
 - for expected number of restarts we get $\sum_{t=1}^{\infty} \frac{1}{t}$
-	- this is a geometric series which diverges
-	- average time between restarts increases as time progresses
-	- both properties are what we want!
-
+- this is a geometric series which diverges
+- average time between restarts increases as time progresses
+- both properties are what we want!
+\end{comment}
 
 \paragraph{Global Loop Detection}
 - normal loop detection gets worse in distributed (TO)HTN planning
