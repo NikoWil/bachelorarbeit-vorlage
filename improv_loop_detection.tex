@@ -1,6 +1,13 @@
 \subsection{Loop Detection}
 \label{improv: loop detection}
 
+- loop detection in other planners
+- changes in CrowdHTN as a parallel planner
+- loop detection based on hash sets
+- what happens if we allow false positives
+	- implications on completeness (and how we deal with it)
+	- designing a distributed loop detection mechanism with information sharing
+
 \todo{Make sure to always talk about isomorphic task networks instead of equivalent? Quote \cite{holler2021loop}. Define isomorphism!}
 \todo{quote about loop detection in graph search?}
 \todo{quote about distributed loop detection in graph search?}
@@ -78,6 +85,38 @@ In case of hash collisions, we have to fall back to a full comparison of world s
 \todo{Write about why a quotient filter is not the solution! (or at least why it was not chosen)}
 
 \paragraph{TODO: Approximate membership queries}
+\cite{bender2011don}
+- introduce quotient filter
+
+\cite{fan2014cuckoo}
+- introduce cuckoo filters
+
+\cite{bloom1970space}
+- introduces bloom filters as a concept
+- optimized for easy rejection
+- admits some false positives
+- bloom filter is an array of $m$ bits, initially all set to 0
+- use $k$ hash functions
+- inserting an element: compute $k$ hashes which are in $0, \ldots, m - 1$ and set the corresponding bits to 1
+- testing for element: check all corresponding bits
+- assuming hashing takes time $\mathcal{O}(t)$, this gives us time $\mathcal{O}(k \cdot t)$ for insertion and membership query
+
+- bloom filters do not support deletions as we cannot simply set a bit to zero (more than one element may have set it to 1)
+\cite{fan2000summary}
+- instead of a single bit use a counter, can be decreased in all $k$ locations for deletion
+
+\cite{broder2004network}
+- false positive rate is $(1 - e^{-\frac{kn}{m}})^k$
+
+\cite{xie2007scalable}
+- bloom filters assume a static set
+- technically we do have a static set, however it is prohibitively large (and we will never fully explore it), as a result we treat it as dynamic
+- defines scalable bloom filters: add a new filter of twice the size when full
+- after adding a linear number of filters, we can store an exponential number of elements while keeping our error guarantees
+- insertion: check whether biggest filter is full, if yes, create new else insert into biggest
+- membership check: look up in all sub-filters
+
+
 - we drop the assumption of perfection
 - allow either false positives or false negatives
 - in our case false positives (i.e. only 'definitely not in filter' or 'probably in filter')
