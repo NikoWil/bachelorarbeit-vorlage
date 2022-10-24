@@ -1,12 +1,15 @@
 \subsection{Loop Detection}
 \label{improv: loop detection}
+In recent years it has become clear that the recursive nature of (TO)HTN instances poses its own set of challenges to (TO)HTN planners. As a result, mechanisms to perform loop detection have become an active area of research with both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} exploring it.
+In this section we will discuss loop detection specifically in the context of parallel and distributed (TO)HTN planning. We start out with a discussion of loop detection techniques in other planners such as PANDA and HyperTensioN in section \ref{ld - history others}. This is followed by a short overview of how CrowdHTN specifically differs and how this changes our base assumptions in section \ref{ld - tohtn simplifications}. Afterwards we first explore loop detection as it is already present in CrowdHTN in section \ref{ld - perfect loop detection}. We conclude by exploring how approximate-membership-query (AMQ) data structures can be used in (TO)HTN loop detection, how this affects completeness of the progression search algorithm and present our design for a distributed and global loop detection mechanism in section \ref{ld - approximate loop detection}.
 
+\begin{comment}
 - loop detection in other planners
 - changes in CrowdHTN as a parallel planner
 - loop detection based on hash sets
 - what happens if we allow false positives
-	- implications on completeness (and how we deal with it)
-	- designing a distributed loop detection mechanism with information sharing
+- implications on completeness (and how we deal with it)
+- designing a distributed loop detection mechanism with information sharing
 
 \todo{Make sure to always talk about isomorphic task networks instead of equivalent? Quote \cite{holler2021loop}. Define isomorphism!}
 \todo{quote about loop detection in graph search?}
@@ -15,9 +18,7 @@ This section will discuss loop detection as it is used in (TO)HTN planning in ge
 - distributed loop detection (communication and merge operations become important!)
 - perfect loop detection
 - probabilistic loop detection (approximate membership query)
-
-- \cite{magnaguagno2020hypertension} domains can have introduce infinite loops, without some kind of loop detection we loose completeness (and performance)
-
+\end{comment}
 
 \subsubsection{Loop Detection in Other (TO)HTN Planners}
 \label{ld - history others}
@@ -76,9 +77,10 @@ In case of hash collisions, we have to fall back to a full comparison of world s
 \end{comment}
 
 \subsubsection{TODO: Approximate Loop Detection}
+\label{ld - approximate loop detection}
 - so far: loop detection is perfect
 - what if we drop this assumption of no false positives?
-- short overview over AMQ data structures
+- short overview over AMQ data structures, focus on bloom filters
 - explore the implications on completeness
 - how does this help us with distributed loop detection?
 \todo{Approximate Membership Queries}
@@ -86,6 +88,7 @@ In case of hash collisions, we have to fall back to a full comparison of world s
 
 \paragraph{TODO: Approximate membership queries}
 \cite{bender2011don}
+- approximate-membership-query (AMQ) data structures
 - introduce quotient filter
 
 \cite{fan2014cuckoo}
@@ -115,26 +118,6 @@ In case of hash collisions, we have to fall back to a full comparison of world s
 - after adding a linear number of filters, we can store an exponential number of elements while keeping our error guarantees
 - insertion: check whether biggest filter is full, if yes, create new else insert into biggest
 - membership check: look up in all sub-filters
-
-
-- we drop the assumption of perfection
-- allow either false positives or false negatives
-- in our case false positives (i.e. only 'definitely not in filter' or 'probably in filter')
-- the data structure we search is called approximate membership query
-- bloom filters and quotient filters are two examples of this
-- bloom filters use $k$ hash functions and set corresponding bits
-- more compact representation of the whole thing
-- checking for membership in O(1) instead of O(number of open tasks + world state size)
-
-- bloom filter:
-- $m$ bits in the array, $k$ hash functions, $n$ elements contained
-- 
-
-- expanding bloom filters allow us to mostly keep performance while allowing arbitrary size
-- while also keeping the false positive probability in check
-- double size each time the filter is full
-
-- detailed explanation of bloom filter
 
 \paragraph{Completeness in the face of false positives}
 While using approximate membership queries as described in the previous paragraph gives us a number of advantages, it also introduces a new set of challenges. Among these is the fact that false positives become a possibility. As a result, we can expect to wrongfully cut off parts of our search space. More specifically, if we perform progression search using bloom filters and $n = n_1, \ldots, n_l$ is a path of length $l$ from our initial search node to a goal search node, then for any $n_i$ in $n$, the search nodes $n_1, \ldots, n_{i-1}$ may collectively set the $k$ hashes associated with $n_i$, filtering it out. This may end up turning a (TO)HTN problem unsolvable for us even though a plan exists. As a result, our planner, if otherwise unchanged, will no longer be complete. \\
