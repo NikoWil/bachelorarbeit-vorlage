@@ -288,19 +288,22 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 \include{prelim_crowdhtn}
 \include{prelim_mallob}
 
+related work:
+- distributed search: hash distributed a star
+
+- paracooba as malleable SAT solver
+- mallob as malleable SAT solver
+
+- parallel planners: SHIP, Crowd, Mallotane (Lilotane + Mallob, limited as only the SAT solving is malleable)
+- in the wider sense: applications that internally rely on SAT
+- few malleable applications exist as it puts a strain on developers
+
+- not aware of any other work in malleable (TO)HTN planning
+
 \section{TOHTN Metadata}
 - researchers in TOHTN planning have collected a number of test instances for TOHTN planning
 - provide some analysis of those instances in the context of modelling TOHTN planning as graph search
 - provide a foundation to discuss the effects of changes and improvements in the crowd planning framework
-
-\section{Implementation}
-- Mallob interface (Job)
-- all methods need to return fast
-- have a separate worker thread
-- where possible communicate via atomic bools, not locking
-\include{impl_mallob_integration}
-\include{impl_crowd_adaptions}
-\include{impl_crowd_improvements}
 
 restarts:
 - how to propagate the version
@@ -348,7 +351,23 @@ restarts:
 
 \include{malleable_crowd}
 
+\section{Implementation}
+- Mallob interface (Job)
+- all methods need to return fast
+- have a separate worker thread
+- where possible communicate via atomic bools, not locking
+\include{impl_mallob_integration}
+\include{impl_crowd_adaptions}
+\include{impl_crowd_improvements}
+
 \section{Experimental Evaluation}
+- putting numbers to memory savings and how many nodes we save from instantiation (also saves our loop detection!)
+- show scaling on a nice instance
+- hash set vs bloom filter (both after optimizations!)
+- comparison of search algorithms
+	- show just how bad BFS is? (branching factor + minimum layer through Lilotane)
+- test the global loop detection
+- test the malleability
 
 \section{Future Work}
 \include{future_work}
