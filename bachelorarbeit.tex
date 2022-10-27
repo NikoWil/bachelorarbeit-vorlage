@@ -317,37 +317,8 @@ restarts:
 \include{improv_loop_detection}
 \include{improv_planner_completeness}
 
-\section{Malleability in the Context of CrowdHTN}
-- we need to distribute the problem description efficiently (as we need to do it time and time again)
-	- efficiently here means little communication overhead
-	- choose to do the lifted instance
-	- ease of implementation, we do not see it as a core issue
-
-- integrate new workers efficiently
-	- work stealing is nice here
-
-- deal with disappearing workers
-	- either design a scheme to preserve global knowledge or be able to deal with loss of information
-	- in our case we deal with loss of information
-	- two parts: loosing information stored in the fringe of a terminated node and loosing messages of dying workers
-	- loosing information stored in the fringes:
-		- multiple options:
-			- send back nothing, loose parts of the search space
-			- send back the root, redo parts of the search (also, loop detection!)
-			- send back everything, takes much communication
-			
-			- our loop detection scheme already implies that we loose parts of the search space and we have measures in place to deal with this fact (restarts)
-			- for this reason we go with this approach
-			
-	- loosing information due to lost messages:
-		- Mallob has a mechanism to return messages
-		- however, messages can still be lost (return message and original sender dies in the meantime)
-		- we could change Mallob to send such messages to the root worker
-		- however, this would turn the root into a bottleneck
-		- again, we have mechanisms in place to deal with overall loss of information without loosing completeness
-		- at the same time, we need to adapt our handling of return messages to ensure all workers stay in a valid state and do not get stuck
-		
-	- getting wrong information (worker dies, is replaced, gets message meant for old worker)
+\section{A Malleable TOHTN Planner}
+\include{malleable_tohtn}
 
 \include{malleable_crowd}
 
