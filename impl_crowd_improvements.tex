@@ -1,8 +1,6 @@
-\section{Improvements to CrowdHTN}
+\subsection{Reducing the Memory Footprint of CrowdHTN}
 
-\subsection{Reducing Memory Consumption}
-
-\subsubsection{Efficiently Storing the Preceding Plan}
+\paragraph{Efficiently Storing the Preceding Plan}
 - no longer use a vector of USignature
 - instead use an ImmutableStack<USignature>
 - this way we can go from linear overhead to constant memory per search node!
@@ -11,17 +9,22 @@
 - still, lots of sharing!
 - lets protocol the thing (memory logging overall)
 
-\subsubsection{Reducing Copies of the World State}
-- if the next open task is an action, there is only a single possible way to resolve it
-- in other words, a search node whose next open task is an action always has zero or one children
-- this is not a very interesting node, either the preconditions hold or they do not
-- such nodes are no longer represented explicitly
-- instead, apply all actions from the sequence of open task up until the first abstract task is encountered
-- then also resolve that abstract task
-\todo{Add graphic showing how many fewer nodes are represented!}
+\paragraph{Only Saving 'Potentially Interesting' Nodes}
+\todo{better title?}
+One of the main improvements we made to the internal workings of CrowdHTN is to reduce the number of search nodes ever explicitly represented. The main idea behind this optimization is that if the next task we need to resolve is an action, then our search node has only one possible child. As such, this search node does not represent a choice point in our search and we do not need to ever explicitly instantiate it. \\
+More formally speaking, let $t = t_1, \ldots, t_n$ be our sequence of open tasks. Then let $t' = t_1, \ldots, t_k$ be the longest prefix of $t$ which consists of only actions. If $k = n$, we create the next search node by applying all actions, checking preconditions and applying effects as we go. If $k < n$, we create the next search node by applying all actions in $t'$ and then additionally resolving abstract task $t_{k+1}$. \\
+In addition to reducing the size of our fringe by reducing the overall number of search nodes, we specifically hope to save both memory and run time by reducing the number of created and represented world states. This is due to the fact that in our old algorithm resolving tasks $t_1, \ldots, t_k$ would have necessitated the creation of $k$ world states which would also not be shared as in our previously introduced scheme.o
 
-\subsubsection{Only Saving 'Potentially Interesting' Nodes}
+- first task in task network may be action
+- then there is only one possible child
+- the search node is not actually interesting in that it does not represent a choice point in our graph
+- new definition of a search step: for sequence of open tasks $t_1, \ldots, t_k$, let $t_1, \ldots, t_m$ be the longest prefix consisting of all actions
 
+
+\subsection{Preceding Plan}
+\todo{Section no longer valid for current crowd}
+In the initial implementation each node stored the full preceding plan as a sequence of all reductions that were applied so far. This leads to roughly quadratic overhead (sum over 1..n, only roughly as not each step increases the length. Wait, is it roughly, then? Probably, as the fraction of steps that increment the preceding plan should be kinda constant)
+This duplication was not needed. The newer implementation instead stores an optional<reduction> in each node. I.e., the preceding reduction is stored if one exists, nothing if there isn't one. When the preceding plan is needed, either for communication or to extract a plan, the current search path is iterated and all reductions are accumulated.
 
 \subsection{Efficiently Hashing Nodes of the Search Graph}
 \todo{Time is not actually constant for world state -> what is the expected time?}
@@ -44,6 +47,9 @@ Open tasks:
 	\item Effectively, this means that each task is hashed exactly once
 	\item As we already have to push each task onto the open tasks, inserting an additional O(1) operation on pushing does not change the asymptotic runtime
 \end{itemize}
+
+The same technique is used to efficiently compute our heuristic presented in section \ref{improv: crowd heuristic}
+
 World state:
 \todo{this is not implemented yet, take care to actually bring it into Crowd}
 \begin{itemize}
@@ -53,15 +59,11 @@ World state:
 	\item Is this actually a time saving?
 	\todo{Only put node into loop detection as it is explored, so we can always keep exploring the local node (the node we are colliding with may be arbitrarily far back in our fringe)}
 	\todo{Evaluate how many world state hashes we actually compute in both cases. Hashing a world state of a node which is ultimately not explored (and which is otherwise not needed) is wasted.
-	Number of computations on lazy hashing: number of nodes created - number of nodes remaining in fringe on plan found}
+		Number of computations on lazy hashing: number of nodes created - number of nodes remaining in fringe on plan found}
 	\item Future work: the hash of the world state is order independent (sum of squares of individual hashes), to not worry about forcing any fixed iteration order. Utilize this and wrapping maths to hash only the differential of 
 \end{itemize}
 
-\subsection{Preceding Plan}
-\todo{Section no longer valid for current crowd}
-In the initial implementation each node stored the full preceding plan as a sequence of all reductions that were applied so far. This leads to roughly quadratic overhead (sum over 1..n, only roughly as not each step increases the length. Wait, is it roughly, then? Probably, as the fraction of steps that increment the preceding plan should be kinda constant)
-This duplication was not needed. The newer implementation instead stores an optional<reduction> in each node. I.e., the preceding reduction is stored if one exists, nothing if there isn't one. When the preceding plan is needed, either for communication or to extract a plan, the current search path is iterated and all reductions are accumulated.
-
+\begin{comment}
 \subsection{Lazy Instantiation of Child Nodes}
 lazy instantiation works on the basis of finding all free variables of a method and creating Reductions based on all possible combinations
 
@@ -99,53 +101,4 @@ Disadvantage: fixed order. With shuffling within each domain might be random aga
 Space filling curves come with the restriction of being strictly continuous
 We do not need this property. All we are interested in is an easy to compute fixed order in which the whole space is iterated where each permutation is hit exactly once
 We want only self-avoiding curves, to not hit any instantiation twice (could loop detection just fix that? But it would be a bad fix)
-
-\subsection{Using Domain Meta-Information}
-inspiration taken from HyperTensioN
-
-taking preconditions of tasks and lifting them up into methods
-Only do this if the precondition is guaranteed to also apply to the method (cannot be achieved before the respective task?)
-This allows us to stop exploring paths earlier
-
-\subsubsection{Restarts Under Loop Detection}
-- bloom filters are of fixed size. If we propose a maximum false-positive rate, they will fill up at some point
-- this necessitates the need for restarts
-- bloom filter architecture: for local loop detection, use an expanding bloom filter (citation!)
-- this allows us to not incur any restarts due to local state
-- for global loop detection, we use a fixed-size bloom filter
-- if a node is encountered twice for local loop detection, add it to the global loop detector, to communicate
-
-- we know that in mallob, the tree of workers is always a 'full' tree, except for the lowest level
-- i.e. we may be missing some nodes to the right end of the lowest level
-- especially, the root node always survives
-- as a result, the root node always receives all the messages about shared loop detection data
-- i.e., if the global loop detection bloom filter on any node is full, it follows that the global loop detection bloom filter on the root node is also full
-- the opposite does not hold (i.e. a new node enters just as the root node bloom filter fills up)
-- as a result, we can simply delegate the question of whether to restart to the root node and have it done in a centralized way, simplifying our communication patterns
-
-\subsubsection{Reaching Consensus on Search Version}
-- each search version corresponds to a restart with subsequent doubling in size of the global loop detector
-- keeping versions in sync is of importance
-- we do not want to loose any work
-- we do not want to insert search nodes from a wrong version into our bloom filter (especially old node into new filter, other way around is discarded either way)
-- each message between workers is extended by their internal version
-- if the version of a received message is higher than the internal version, the internal version is increased and then acted accordingly
-- new workers get updated to the current version the first time they ask for a work package
-- work requests and responses do not suffice as a version updating mechanism, as work packages may be arbitrarily large and messages arbitrarily rare
-- 
-
-\subsubsection{Completeness Under Loop Detection}
-- any single iteration may be incomplete, e.g. if initial node and goal node hash to the same values
-- with restarts, we have uniform hashes, compute the chance of colliding each time
-- this necessitates changing seeds with each restart
-- soon, we will not collide
-- yay, plan can be found!
-
-- we do loose termination
-- so far, termination could be known if the search tree gets too deep (cite limits known from other TOHTN paper)
-- however, this is infeasible, as RAM is actually finite (refer to known branching factors!)
-- i.e., we do not know the hash of a goal node, as a result we cannot exclude the possibility of it simply being cut off each time so far
-- we also do not know the hash of all nodes just before a goal node, etc (the path could always only be a single node wide)
-- as a result, we cannot terminate at any point, as we cannot exclude the plan hiding in some always-cut-off part of the search space
-- loosing termination is not a big deal anyways, I guess?
-
+\end{comment}

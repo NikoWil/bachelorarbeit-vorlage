@@ -360,19 +360,8 @@ restarts:
 \include{impl_crowd_improvements}
 
 \section{Experimental Evaluation}
-- describe i135
-- 900 seconds per instance
 
-- putting numbers to memory savings and how many nodes we save from instantiation (also saves our loop detection!)
-- show scaling on a nice instance
-- hash set vs bloom filter (both after optimizations!)
-- comparison of search algorithms
-	- show just how bad BFS is? (branching factor + minimum layer through Lilotane)
-- test the probabilistic restarts
-	- with 900 seconds we expect $\sum_{t=1}^{899} \approx 7.38$ restarts per run
-
-- test the global loop detection
-- test the malleability
+\include{eval}
 
 \section{Future Work}
 \include{future_work}

@@ -1,11 +1,11 @@
 \subsection{Search Algorithms Used in CrowdHTN}
-\todo{ref impl}
+\label{improv: search algorithms}
 As part of the re-engineering of CrowdHTN, we changed the implementation of the search algorithms to be based on a fringe. As mentioned in \cite{holler2020htn} we can simply switch out the underlying fringe data structure to emulate different search algorithms without making any changes to our core planner. Enabled by this change, we have implemented four search algorithms and will discuss them in the following section:
 \begin{itemize}
 	\item Random depth-first search
 	\item Random breadth-first search
 	\item Greedy best-first search
-	\item A-star like search \todo{just heuristic search?}
+	\item A-star like search
 \end{itemize}
 \begin{comment}
 	- as mentioned in \cite{holler2020htn}, we can use a fringe-based implementation of progression search to swap out the fringe and realize different search strategies
@@ -35,6 +35,7 @@ Overall, we do not expect high performance of our breadth-first search. It may h
 Both depth-first and breadth-first search are unguided and do not depend the order of search node exploration on any information contained in those nodes. Other planners, such as PANDA, use heuristics to guide their search. We will describe general information about heuristics and their use in PANDA according to \cite{holler2020htn} and then describe how we try and adapt the use of heuristics for malleable TOHTN planning.
 
 \paragraph{Heuristics in HTN in general and PANDA specifically}
+\label{improv: crowd heuristic}
 The general idea of heuristics is to avoid exploring all of our search space. They achieve this by guiding the search to the most promising search nodes first.
 In TOHTN planning, our choices during search are restricted by both the hierarchy of tasks as well as the world state. As a result, the best heuristics should make use of both pieces of information for the best results. \\
 One avenue to deriving heuristics for HTN planning would be to adapt classical planning heuristics. This proves difficult, however, as these heuristics do not know about the hierarchy and may assume a state-based goal which HTN planning often does not have. To avoid such issues, the PANDA planner goes the other way around. PANDA computes a classical planning problem which is a relaxation of the HTN problem at hand. Then a solution to this relaxed model is approximated with the help of classical planning heuristics and the result is used to guide the initial HTN planning procedure. The computation of the classical model is possible in polynomial time and only done fully in the beginning, afterwards the model is only updated for the current state of planning. As a result, the heuristic takes into account both hierarchy and world state while remaining relatively efficient.
@@ -72,7 +73,7 @@ While such a grounding is already available in PANDA, CrowdHTN does not perform 
 - depending on instance grounding can take multiple minutes! (even for the efficient PANDA grounder up to 40 seconds)
 - we perform this work multiple times, especially in a malleable environment
 \end{comment}
-\paragraph{A Heuristic for malleable HTN Planning}
+\paragraph{A Heuristic for Malleable HTN Planning}
 To counter the startup cost of the PANDA heuristic, we have devised a simpler heuristic which is cheap to precompute and can easily be used in malleable planning. The goal is to have little startup overhead and to retain the efficient evaluation at each planning step. While this necessarily limits any precomputation to the lifted instance and the precision of our heuristic comes with problems as discussed in the previous paragraphs, we hope to still find some performance gains on at least some problem instances. \\
 As heuristic value, we simply use a lower bound on the number of reductions we still need to perform to fully resolve our list of open tasks. When computing this lower bound we ignore preconditions and effects, searching the shortest possible way through the hierarchy. We precompute this value for each task as described in algorithm \ref{algo: gbfs heuristic}. The remaining depth for each action is initialized to zero. The remaining depth for each abstract task is initially unknown. In each step we loop over all tasks $t$ whose remaining depth is unknown. For each method $m$ of task $t$ we check the depth of all subtasks. If all depths are known, the method depth is set to the sum of all subtask depths plus one. For each task we choose the minimum value over all available reductions. \\
 If in any iteration we do not get a new depth for at least one task, we stop the computation. Any task which does not have an assigned depth at this point is not resolvable at all and can be ignored. \\
