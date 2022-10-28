@@ -4,35 +4,66 @@ The goal of this section is to describe how we adapt it to be a malleable TOHTN 
 	\item Integrating new PEs into a running job
 	\item Dealing with PEs leaving the job while it runs
 \end{itemize}
+In the following sections we will address these problems in this order. Both distributing the job information and integrating new workers do not pose significant problems. Most time will be spent on the handling of disappearing PEs.
 Due to the fact that we specifically integrate CrowdHTN with Mallob, in some parts we will have to refer to implementation details regarding how Mallob organizes the PEs assigned to a job as well as general message delivery.
 
 \subsection{Distributing Jobs}
+When a PE is assigned to a job, it needs to obtain a description of this job. In case of TOHTN planning, the choice is mostly between a lifted or ground TOHTN instance. Depending on pruning, a ground instance may be up to exponential in size \cite{behnke2020succinct}. Encoding and communicating such a ground instance would take up much time, which is why we decided to communicate our problem as a lifted instance. \\
+With the lifted instance, we choose to simply take the textual hddl input (\cite{holler2020hddl}) and send it as-is. While this does occur the overhead of locally parsing the instance on each PE, communicating the parsed instance would involve re-encoding and effectively re-parsing it locally, too. \\
+In malleable (TO)HTN planning there is a more general trade-off involved when it comes to precomputation. While parsing the instance is unavoidable, we can choose whether we want to spend time grounding and pruning our instance. It has been shown that grounding and pruning improve the planning performance (\cite{behnke2020succinct}) and allow for the computation of complex and good heuristics (\cite{holler2020htn}), but grounding, pruning and other precomputations are expensive operations themselves. As a result, a PE which is only assigned to our job for a short time may never perform any actual planning work before it is reassigned to the next job. For this reason, CrowdHTN takes an alternative path. The TOHTN instance is kept in lifted form. Instantiation is only performed as needed to explore the current search node. This allows CrowdHTN to start working immediately to utilize even short-lived PEs.
+\begin{comment}
 - grounded instance may be exponential in size
 - exceedingly high communication cost
 - lifted instance it is
-	- sending a parsed instance - we still need to encode and decode it for sending
-	- we would effectively have to build a parser for this
-	- we already do have a parser
-	- we simply encode the string and parse locally
-	- not a core issue to us, so we go for ease of implementation
+- sending a parsed instance - we still need to encode and decode it for sending
+- we would effectively have to build a parser for this
+- we already do have a parser
+- we simply encode the string and parse locally
+- not a core issue to us, so we go for ease of implementation
+\end{comment}
 
 \subsection{Integrating New PEs Into Malleable CrowdHTN}
+To integrate a new PE into a running TOHTN job, it needs both the general job description and part of the actual work to handle. In the previous section we explained how the job description is obtained, now we will focus on the work itself. \\
+The efficient integration of new PEs into a running job is where work stealing shows it's strength. For work stealing, there is no functional difference between a PE which has locally run out of work and a new PE which has the job description but no work yet. Both will message other PEs at random to receive a new work package with no special handling required. As a result, a new PE can perform at full efficiency almost immediately, allowing our job to utilize resources as they become available.
+\begin{comment}
 - work stealing makes this easy
 - there is functionally no difference between a new PE and a PE which has locally run out of work
 - no special handling required at all
 
+- only setup work: parsing, initiating heuristic
+- CrowdHTN may be less efficient, but can work immediately, make use of very short-lived PEs
+\end{comment}
+
 \subsection{Handling PEs Leaving at Run Time}
-- goal: complete and correct planner
-- scalable
-- work according to the 
+The last challenge in designing a malleable CrowdHTN is the fact that PEs may disappear at any time. This represents a potential loss of information. The information loss presents itself in two ways. First, the loss of the local search fringe, if we do not communicate it to another PE and second, messages which may be lost in transit as their receiver no longer belongs to the same job. To deal with this, Mallob does allow us to detect locally when a PE is taken away from a job and additionally provides a message return mechanism. We will present our solutions to both cases with a focus on preserving the completeness property of CrowdHTN.
 
-- we need to distribute the problem description efficiently (as we need to do it time and time again)
-	- efficiently here means little communication overhead
-	- choose to do the lifted instance
-	- ease of implementation, we do not see it as a core issue
+\subsubsection{Handling the Local Fringe}
+When a local PE is unassigned from a job, we will loose the local search fringe. As Mallob signals a PE when it is unassigned from a job, we are however free to encode parts or all of the fringe and communicate them to another PE. This leaves us with a number of choices where we may trade-off data loss versus efficiency and communication. On this axis we discuss three choices
+\begin{itemize}
+	\item Encode and redistribute the whole local fringe
+	\item Communicate the root of the local search space
+	\item Communicate nothing, loose the local fringe
+\end{itemize}
 
-- integrate new workers efficiently
-	- work stealing is nice here
+\paragraph{Encoding and redistributing the whole fringe}
+Encoding and sending off the local fringe to another PE is, in a way, the easiest operation. No information is lost, preserving completeness in our planner. It does, however, come with a number of disadvantages. First, the local fringe may be arbitrarily large, especially considering that TOHTN planning is EXPSPACE-complete as seen in section \ref{prelim: tohtn complexity}. Encoding and communicating a large fringe is a very expensive operation which would increase the time from Mallob telling a PE to suspend itself until the PE actually is free for the next job. Second, receiving a large fringe would strain the memory of the receiving PE which may lead to deleting parts of it anyways to avoid crashes. Third, to avoid duplication of work as Mallob may reassign the PE to the old job, the local fringe would have to be cleared out. Doing so would weaken the effect of Mallob reassigning previously used PEs to the same job.
+\begin{comment}
+- the most complete operation
+- nothing is lost
+- nodes higher up in the tree of PEs may be more strained now (depending on the communication pattern)
+- a very expensive operation
+- take care to delete the local fringe to avoid duplication!
+\end{comment}
+
+\paragraph{Communicating the root of the local search space}
+- easy and cheap
+- duplication of work
+	- re-exploring things
+	- nodes that were sent off to other PEs
+- how to deal with global loop detection
+	- delete everything, too conservative, less performance
+	- do not delete, cut off things wrongly
+		- restarts deal with this increased false positive rate
 
 - deal with disappearing workers
 	- either design a scheme to preserve global knowledge or be able to deal with loss of information
@@ -42,11 +73,12 @@ Due to the fact that we specifically integrate CrowdHTN with Mallob, in some par
 		- multiple options:
 			- send back nothing, loose parts of the search space
 			- send back the root, redo parts of the search (also, loop detection!)
-			- send back everything, takes much communication
+			- send back everything, takes much communication (also may duplicate the search space on resume)
 			
 			- our loop detection scheme already implies that we loose parts of the search space and we have measures in place to deal with this fact (restarts)
 			- for this reason we go with this approach
 			
+\subsubsection{Handling Lost Messages}
 	- loosing information due to lost messages:
 		- Mallob has a mechanism to return messages
 		- however, messages can still be lost (return message and original sender dies in the meantime)
