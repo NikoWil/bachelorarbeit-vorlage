@@ -1,51 +1,50 @@
-\subsection{Reducing the Memory Footprint of CrowdHTN}
-
-\paragraph{Efficiently Storing the Preceding Plan}
-- no longer use a vector of USignature
-- instead use an ImmutableStack<USignature>
-- this way we can go from linear overhead to constant memory per search node!
-- actually, with A star or loop detection via hashset it gets like, really complicated
-- argh
-- still, lots of sharing!
-- lets protocol the thing (memory logging overall)
-
-\paragraph{Only Saving 'Potentially Interesting' Nodes}
-\todo{better title?}
+\subsection{Improving the Search Node Exploration Algorithm}
 One of the main improvements we made to the internal workings of CrowdHTN is to reduce the number of search nodes ever explicitly represented. The main idea behind this optimization is that if the next task we need to resolve is an action, then our search node has only one possible child. As such, this search node does not represent a choice point in our search and we do not need to ever explicitly instantiate it. \\
 More formally speaking, let $t = t_1, \ldots, t_n$ be our sequence of open tasks. Then let $t' = t_1, \ldots, t_k$ be the longest prefix of $t$ which consists of only actions. If $k = n$, we create the next search node by applying all actions, checking preconditions and applying effects as we go. If $k < n$, we create the next search node by applying all actions in $t'$ and then additionally resolving abstract task $t_{k+1}$. \\
-In addition to reducing the size of our fringe by reducing the overall number of search nodes, we specifically hope to save both memory and run time by reducing the number of created and represented world states. This is due to the fact that in our old algorithm resolving tasks $t_1, \ldots, t_k$ would have necessitated the creation of $k$ world states which would also not be shared as in our previously introduced scheme.o
-
+In addition to reducing the size of our fringe by reducing the overall number of search nodes we create, we specifically hope to save both memory and run time by reducing the number of created and represented world states. This is due to the fact that in our old algorithm resolving tasks $t_1, \ldots, t_k$ would have necessitated the creation of $k$ world states which would also not be shared as in our previously introduced scheme. Reducing the number of search nodes has additional benefits regarding loop detection. Using hash sets we reduce the memory footprint as there are fewer nodes inserted in the visited nodes set and using bloom filters the inherent probability for false positives is less of a problem the fewer nodes we check against the filter.
+\begin{comment}
 - first task in task network may be action
 - then there is only one possible child
 - the search node is not actually interesting in that it does not represent a choice point in our graph
 - new definition of a search step: for sequence of open tasks $t_1, \ldots, t_k$, let $t_1, \ldots, t_m$ be the longest prefix consisting of all actions
-
-
+\end{comment}
+\begin{comment}
 \subsection{Preceding Plan}
-\todo{Section no longer valid for current crowd}
+\todo{Section no longer valid for current crowd?}
 In the initial implementation each node stored the full preceding plan as a sequence of all reductions that were applied so far. This leads to roughly quadratic overhead (sum over 1..n, only roughly as not each step increases the length. Wait, is it roughly, then? Probably, as the fraction of steps that increment the preceding plan should be kinda constant)
 This duplication was not needed. The newer implementation instead stores an optional<reduction> in each node. I.e., the preceding reduction is stored if one exists, nothing if there isn't one. When the preceding plan is needed, either for communication or to extract a plan, the current search path is iterated and all reductions are accumulated.
+\end{comment}
 
 \subsection{Efficiently Hashing Nodes of the Search Graph}
-\todo{Time is not actually constant for world state -> what is the expected time?}
+As we described in section \ref{ld - perfect loop detection}, we hash a search node by hashing all of it's open tasks as well as the full world state. While the size of the world state and thus the time required to hash a world state is bound by the number of ground predicates no such limit exists regarding the open tasks. In other words, hashing both world state and open tasks has an unbounded run time which limits the effectiveness of all hash based loop detection mechanisms. In this section we will describe how we manage to reduce the time required to hash the open tasks to $\mathcal{O}(h \cdot \max \left\{ \text{\# subtasks of } r | r \in reductions \right\})$ where a single predicate can be hashed in $\mathcal{O}(h)$. \\
+Let $n_1, n_2$ be search nodes with $n_2$ a child of $n_1$. Let $t_1, t_2$ be their respective sequences of open tasks with $t_1$ containing at least 1 abstract task which can be resolved by a reduction $r$ with $m$ subtasks $t_{r_1}, \ldots, t_{r_m}$. Furthermore, let $t_1 = t_{1_1}, \ldots, t_{1_k}$ with $t_{1_1}, \ldots, t_{1_l}$ the longest prefix of only actions. Then $t_2 = t_{r_1}, \ldots, t_{r_m}, t_{1_{l+2}}, \ldots, t_{1_k}$, i.e. the subtasks of $r$ concatenated with all of $t_1$ except the prefixed actions and the first abstract task. Assuming we compute our order dependent hash over a task network $t$ by going from back to front, for hashing $t_2$ we can reuse the hash of $t_{1_{l+2}}, \ldots, t_{1_k}$, only computing the hash of $t_{r_1}, \ldots, t_{r_m}$. \\
+Storing the hash with each open task does increase our memory footprint. We do consider the trade-off worth it as the hash is small and it allows us to transform our hash function from an unbound to a bound run time.
+
+\begin{comment}
+- search nodes $n_1 = (t_1, s_1), n_2 = (t_2, s_2)$, $n_2$ is a child of $n_1$, assume $t_1$ contains at least 1 abstract task, resolved by reduction $r$ with $m$ subtasks
+- if $t_1 = t_{1_1}, \ldots t_{1_k}$ with $t_{1_1}, \ldots, t_{1_l}$ the longest prefix consisting of only actions, then $t_2 = t_{2_1}, \ldots, t_{2_m}, t_{1_{l + 2}}, \ldots, t_{1_k}$
+- i.e., $t_2$ consists of the subtasks of the applied reduction concatenated with $t_1$ except for the longest prefix of actions and one more abstract task
+- our hash is order dependent, but if we hash in the order $t_{1_k}, \ldots, t_{1_1}$ we can reuse the hash of $t_{1_k}, \ldots, t_{1_{l+2}}$ for $n_2$, only computing new hashes for $t_{2_m}, \ldots, t_{2_1}$
+- this is possible in $\mathcal{O}(h \cdot m)$ where a single predicate can be hashed in time $\mathcal{O}(h)$
+
 Overview:
 \begin{itemize}
-	\item the hash of a node consists of two parts
-	\item 1: the hash of the open tasks
-	\item 2: the hash of the world state
-	\item We do not care about the hash of the preceding plan. Nodes with open tasks and world state equivalent have equivalent plans leading to a goal (somewhat similar to the Nerode relation) and we do not care about optimality. How he reach this point with equivalent remaining options is thus not of interest to us
-	\item The hash of the world state can be large, but the number of elements is ultimately bound for any particular instance
-	\item The length of the preceding plan is unbounded
+\item the hash of a node consists of two parts
+\item 1: the hash of the open tasks
+\item 2: the hash of the world state
+\item We do not care about the hash of the preceding plan. Nodes with open tasks and world state equivalent have equivalent plans leading to a goal (somewhat similar to the Nerode relation) and we do not care about optimality. How he reach this point with equivalent remaining options is thus not of interest to us
+\item The hash of the world state can be large, but the number of elements is ultimately bound for any particular instance
+\item The length of the preceding plan is unbounded
 \end{itemize}
 Open tasks:
 \begin{itemize}
-	\item Care needs to be taken to use an order independent hash function for the world state, as the underlying representation as a set does not guarantee us any particular iteration order, especially between nodes (might depend on the order of things inserted into the set!)
-	\item Alternatively we could have chosen some other ordered representation, e.g. maintain the world state as a sorted list of predicates with a defined order. This would imply extra work we are unwilling to do.
-	\item For open tasks, we save not only the task itself but additionally the hash of all open tasks from first to current one
-	\item The order in which we hash open tasks is from oldest to newest one
-	\item On applying a Reduction, we push the new open tasks onto the open task stack and compute each of their hashes combined with their predecessors. Each of these hashing operations is completed in O(1)
-	\item Effectively, this means that each task is hashed exactly once
-	\item As we already have to push each task onto the open tasks, inserting an additional O(1) operation on pushing does not change the asymptotic runtime
+\item Care needs to be taken to use an order independent hash function for the world state, as the underlying representation as a set does not guarantee us any particular iteration order, especially between nodes (might depend on the order of things inserted into the set!)
+\item Alternatively we could have chosen some other ordered representation, e.g. maintain the world state as a sorted list of predicates with a defined order. This would imply extra work we are unwilling to do.
+\item For open tasks, we save not only the task itself but additionally the hash of all open tasks from first to current one
+\item The order in which we hash open tasks is from oldest to newest one
+\item On applying a Reduction, we push the new open tasks onto the open task stack and compute each of their hashes combined with their predecessors. Each of these hashing operations is completed in O(1)
+\item Effectively, this means that each task is hashed exactly once
+\item As we already have to push each task onto the open tasks, inserting an additional O(1) operation on pushing does not change the asymptotic runtime
 \end{itemize}
 
 The same technique is used to efficiently compute our heuristic presented in section \ref{improv: crowd heuristic}
@@ -53,15 +52,16 @@ The same technique is used to efficiently compute our heuristic presented in sec
 World state:
 \todo{this is not implemented yet, take care to actually bring it into Crowd}
 \begin{itemize}
-	\item In section XXX \todo{add section, refer to it here} we discussed how each copy of the world state can be shared by many search nodes to reduce the memory footprint
-	\item Instead of hashing the world state each time on demand, we can store a shared tuple of world state and it's hash
-	\item This way, we only hash the world state once, reusing the computation
-	\item Is this actually a time saving?
-	\todo{Only put node into loop detection as it is explored, so we can always keep exploring the local node (the node we are colliding with may be arbitrarily far back in our fringe)}
-	\todo{Evaluate how many world state hashes we actually compute in both cases. Hashing a world state of a node which is ultimately not explored (and which is otherwise not needed) is wasted.
-		Number of computations on lazy hashing: number of nodes created - number of nodes remaining in fringe on plan found}
-	\item Future work: the hash of the world state is order independent (sum of squares of individual hashes), to not worry about forcing any fixed iteration order. Utilize this and wrapping maths to hash only the differential of 
+\item In section XXX \todo{add section, refer to it here} we discussed how each copy of the world state can be shared by many search nodes to reduce the memory footprint
+\item Instead of hashing the world state each time on demand, we can store a shared tuple of world state and it's hash
+\item This way, we only hash the world state once, reusing the computation
+\item Is this actually a time saving?
+\todo{Only put node into loop detection as it is explored, so we can always keep exploring the local node (the node we are colliding with may be arbitrarily far back in our fringe)}
+\todo{Evaluate how many world state hashes we actually compute in both cases. Hashing a world state of a node which is ultimately not explored (and which is otherwise not needed) is wasted.
+Number of computations on lazy hashing: number of nodes created - number of nodes remaining in fringe on plan found}
+\item Future work: the hash of the world state is order independent (sum of squares of individual hashes), to not worry about forcing any fixed iteration order. Utilize this and wrapping maths to hash only the differential of 
 \end{itemize}
+\end{comment}
 
 \begin{comment}
 \subsection{Lazy Instantiation of Child Nodes}
