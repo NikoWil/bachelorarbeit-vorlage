@@ -58,7 +58,7 @@ Encoding and sending off the local fringe to another PE is, in a way, the easies
 \paragraph{Communicating the root of the local search space}
 Instead of communicating the whole local fringe, we can simply encode the root node the local fringe emerged from. In a way, this search node represents a very efficient encoding of the local search space. As we would only communicate a single search node, this would be more efficient and could reuse the facilities we already have in place for work stealing. Similar to encoding the whole fringe, communicating only the root search node would lead to no information loss, preserving completeness. \\
 While this approach is very efficient and avoids loss of information, it does suffer from duplicate work. As we loose the local fringe, we will have to re-explore it again. Additionally, other nodes may have received parts of the local search space via work stealing. These nodes will be re-encountered leading to further duplication. In this way, we would trade-off local performance for encoding and communication against global performance through duplicating parts of our search. Similar to the first case, we would either have to clear out the local fringe upon suspension, decreasing the gains of PE reuse, or accept potential further duplication of work.\\
-Implementing global loop detection as we propose in section \ref{improv: loop detection} would further complicate matters. Upon suspension of a PE, we could leave the global loop detection unaffected, leading to us cutting off parts of the search space once we try to re-explore it. On the contrary, we could remove the global loop detection data of our suspended PE from all other PEs. As more than one PE may have committed the same search node to global loop detection and due to the way bloom filters work, this brings its own problems. Namely, it would degrade global loop detection performance as we may delete more search nodes from our filter than strictly necessary.
+Implementing global loop detection as we propose in section \ref{improv: loop detection} would further complicate matters. Upon suspension of a PE, we could leave the global loop detection unaffected. This might lead to some losses in our search space as nodes will not be reexplored but may also help the search on our other workers which can still profit from being aware of common loops and prominent search nodes. Alternatively, we could remove the global loop detection data of our suspended PE from all other PEs. As more than one PE may have committed the same search node to global loop detection and due to the way bloom filters work, this brings its own problems. Namely, it would degrade global loop detection performance as we may delete more search nodes from our filter than strictly necessary.
 \begin{comment}
 - easy and cheap
 - duplication of work
@@ -75,33 +75,36 @@ Our third option in dealing with disappearing workers is to accept the loss of i
 This leaves us with the problem of information loss. To deal with this, we can revisit the restart mechanism we introduced to deal with a similar problem in probabilistic loop detection. There we argued that correctly designed restarts would allow our planner to be complete even when using a loop detection mechanism suffering from false positives. For this we made no assumptions besides the false positive rater being less than 1. As Mallob guarantees that we will always have at least one PE, never loosing all information, we can simply model the loss of PEs and their local fringes as an extremely high false positive rate. From this it follows that restarts allow us to loose this local information while maintaining overall completeness.
 
 \paragraph{Conclusion}
-As we have seen, there are multiple approaches on how to handle a reduction in the number of available PEs while maintaining planner completeness. As we already include a restart mechanism due to global loop detection and to guarantee the completeness of our random DFS implementation we choose to go with the third option, as the disadvantages are mitigated by the same restart mechanism.
-
+As we have seen, there are multiple approaches on how to handle a reduction in the number of available PEs while maintaining planner completeness. In our design, we decided to communicate the root node of our local search space to a random other PE, inserting it at the back end of the fringe. The other PE is chosen at random to avoid turning any single PE into a bottleneck. We choose this design, as it allows us to avoid the large overhead of communicating the whole fringe while not being overly reliant on restarts to achieve completeness. While restarts do offer us completeness from a theoretical perspective, times between restarts increase rapidly as run time increases. As such we are unwilling to loose large parts of our search space and instead allow for the risk of performing duplicate work. In addition to this, we keep the global loop detection information unchanged, hoping that even after a PE is no longer assigned to a job, other PEs will profit from the information it provides.
 \begin{comment}
-- deal with disappearing workers
-- either design a scheme to preserve global knowledge or be able to deal with loss of information
-- in our case we deal with loss of information
-- two parts: loosing information stored in the fringe of a terminated node and loosing messages of dying workers
-- loosing information stored in the fringes:
-- multiple options:
-- send back nothing, loose parts of the search space
-- send back the root, redo parts of the search (also, loop detection!)
-- send back everything, takes much communication (also may duplicate the search space on resume)
-
-- our loop detection scheme already implies that we loose parts of the search space and we have measures in place to deal with this fact (restarts)
-- for this reason we go with this approach
+- keep the search space around
+- restarts offer completeness from a theoretical perspective
+- however, in practice it may take a long time
+- we are not willing to loose potentially very large parts of our search space
 \end{comment}
 			
 \subsubsection{Handling Lost Messages}
-	- loosing information due to lost messages:
-		- Mallob has a mechanism to return messages
-		- however, messages can still be lost (return message and original sender dies in the meantime)
-		- we could change Mallob to send such messages to the root worker
-		- however, this would turn the root into a bottleneck
-		- again, we have mechanisms in place to deal with overall loss of information without loosing completeness
-		- at the same time, we need to adapt our handling of return messages to ensure all workers stay in a valid state and do not get stuck
-		- the worker may be replaced
-		
-	- getting wrong information (worker dies, is replaced, gets message meant for old worker)
-	
-	- we loose the ability to detect UNPLAN
+In the moldable version of CrowdHTN, we could made a fundamental assumption about all messages, namely that they were guaranteed to be delivered. In malleable CrowdHTN this is no longer possible. If PEs $p_1$, $p_2$ are both assigned to the same job, then $p_1$ may send a message to $p_2$ with $p_2$ being reassigned to a different job before the message arrives. Mallob deals with this by recognizing the message can no longer be handled and returning it to the sender. We go over the way we handle such return messages in our implementation chapter. \\ \todo{add ref! once that subsection exists}
+However, the changing assignments of PEs to jobs imply an additional problem. The return message may be lost as well, if the original sender gets assigned to a different job before the return message can be received. Mallob provides no further handling mechanism for this case. One way to solve this problem would be to extend Mallob to forward such a message to the job's root PE. In our design we instead chose to not handle this case for three reasons. \\
+First, this case is highly contrived and we expect it to be of very little practical significance. It relies on a very specific sequence of events and could only present a problem if the message in question contained a work package. Second, by not handling this any further we simplify our design and implementation as we avoid special-casing the root PE. Third, as we choose to handle unassigned PEs by preserving the root of their local search space, information is preserved even if any of it's transitive children is lost in the moment. Due to this, the lost message does not represent a lost part of our search space. \\
+We can further construct a case where a PE receives a work package and immediately passes it on due to a work request, subsequently loosing the search node. In this case we can still fall back to our restart mechanism to preserve completeness. In addition, we expect this to be extremely rare.
+\begin{comment}
+- this case is contrieved
+- avoid turning the root into a special case
+- information loss occurs specifically when a work package is lost
+- we already communicate the root back
+- this is no problem
+
+- loosing information due to lost messages:
+- Mallob has a mechanism to return messages
+- however, messages can still be lost (return message and original sender dies in the meantime)
+- we could change Mallob to send such messages to the root worker
+- however, this would turn the root into a bottleneck
+- again, we have mechanisms in place to deal with overall loss of information without loosing completeness
+- at the same time, we need to adapt our handling of return messages to ensure all workers stay in a valid state and do not get stuck
+- the worker may be replaced
+
+- getting wrong information (worker dies, is replaced, gets message meant for old worker)
+
+- we loose the ability to detect UNPLAN
+\end{comment}
