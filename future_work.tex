@@ -48,3 +48,8 @@ In this way, using improved dynamic pruning of unproductive task sequences may a
 - we show how a global loop detection mechanism in (TO)HTN planning could work
 - so far, we use a very simple heuristic (encounter a node twice) for which nodes to share
 - more intelligent heuristics are probably helpful
+- we are interested in search nodes often reached, less in recursive tasks (can be resolved locally)
+
+\subsection{Intelligent Restarts}
+- we perform restarts according to the harmonic series
+- SAT solving already knows restarts, explore inner-outer and luby sequence for potentially better performance
