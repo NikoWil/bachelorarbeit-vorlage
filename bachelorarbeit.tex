@@ -84,8 +84,8 @@
 \usepackage{xcolor,hyperref}
 
 \hypersetup{
-  pdftitle={Hier den Titel der Arbeit},
-  pdfauthor={Hier den Author der Arbeit},
+  pdftitle={Malleable Distributed Hierarchical Planning},
+  pdfauthor={Niko Wilhelm},
   pdfsubject={Stichworte, weiteres Stichwort},
   colorlinks=true,
   pdfborder={0 0 0},
@@ -135,10 +135,10 @@
 
     \vfill
 
-    Bachelorarbeit
+    Master's Thesis
     \vspace*{2cm}
 
-    {\bf\huge Malleable TOHTN Planning \\using CrowdHTN and Mallob \par}
+    {\bf\huge Malleable Distributed Hierarchical Planning \par}
     % Siehe auch oben die Felder pdftitle={}
     % mit \par am Ende stimmt der Zeilenabstand
 
@@ -148,7 +148,7 @@
 
     \vspace*{15mm}
 
-    Abgabedatum: 19.10.2012
+    Date of submission: \today
 
     \vspace*{45mm}
 
@@ -317,14 +317,10 @@ restarts:
 \include{improv_loop_detection}
 \include{improv_planner_completeness}
 
-\section{A Malleable TOHTN Planner}
+% starts new section!
 \include{malleable_tohtn}
 
 \section{Implementation}
-- Mallob interface (Job)
-- all methods need to return fast
-- have a separate worker thread
-- where possible communicate via atomic bools, not locking
 \include{impl_mallob_integration}
 \include{impl_crowd_improvements}
 
