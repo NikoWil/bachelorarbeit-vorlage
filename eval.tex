@@ -117,3 +117,57 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 \subsection{Conclusion}
 \label{eval: conclusion}
 - final discussion stuff
+
+Things to plot:
+- old Crowd on 4, 16, 64 cores
+- new Crowd on 4, 16, 64 cores
+- new Crowd with bloom filter, hash set and without ld, 32, 64
+- new Crowd with bloom filter with(out) restarts, 32, 64
+- new Crowd with global loop detection
+- sequential planners HyperTensioN and PANDA
+- Malleable vs non moldable Crowd
+
+\begin{table}
+	\caption{Domain-wise comparison of the old and improved moldable CrowdHTN}
+	\label{table: eval old new}
+	
+	%python3 table_maker.py -results=../evaluation/final_run_data/WorSt_DFS_p4_loop.csv,../evaluation/final_run_data/WorSt_DFS_p16_loop.csv,../evaluation/final_run_data/WorSt_DFS_p64_loop.csv,../experimental_results/results_4_dfs_local_bloom.csv,../experimental_results/results_16_dfs_local_bloom.csv,../experimental_results/results_64_dfs_local_bloom_handlepanic_1.csv -planner_names=CrO4Hs,CrO16Hs,CrO64Hs,CrN4Bl,CrN16Bl,CrN64Bl -out_file=table.txt
+	
+	\begin{adjustbox}{angle=90}
+	
+	\begin{tabular}{|l|cc|cc|cc|cc|cc|cc|}
+		\hline
+		& \multicolumn{2}{c|}{\textbf{CrO4Hs}} & \multicolumn{2}{c|}{\textbf{CrO16Hs}} & \multicolumn{2}{c|}{\textbf{CrO64Hs}} & \multicolumn{2}{c|}{\textbf{CrN4Bl}} & \multicolumn{2}{c|}{\textbf{CrN16Bl}} & \multicolumn{2}{c|}{\textbf{CrN64Bl}}\\
+		Domain & IPC & Cov & IPC & Cov & IPC & Cov & IPC & Cov & IPC & Cov & IPC & Cov\\
+		\hline
+		AssemblyHierarchical & \textbf{1.0} & 20\%  & \textbf{1.0} & 20\%  & 0.98 & 20\%  & \textbf{1.0} & 20\%  & \textbf{1.0} & 20\%  & \textbf{1.0} & 20\%  \\
+		Barman-BDI & 1.79 & 40\%  & 1.78 & 40\%  & 1.74 & 40\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  & 1.97 & 40\%  \\
+		Blocksworld-GTOHP & 2.0 & 40\%  & 1.99 & 40\%  & \textbf{2.49} & 60\%  & 2.0 & 40\%  & 2.0 & 40\%  & 2.39 & 60\%  \\
+		Blocksworld-HPDDL & \textbf{3.21} & 80\%  & 3.14 & 80\%  & 3.01 & 80\%  & 3.03 & 80\%  & 3.02 & 80\%  & 2.98 & 80\%  \\
+		Childsnack & 2.6 & 80\%  & 2.55 & 80\%  & 2.37 & 80\%  & \textbf{2.96} & 80\%  & 2.93 & 80\%  & 2.82 & 80\%  \\
+		Depots & 3.63 & 80\%  & 3.72 & 80\%  & 3.6 & 80\%  & \textbf{3.92} & 80\%  & 3.86 & 80\%  & 3.85 & 80\%  \\
+		Elevator-Learned-ECAI-16 & 4.06 & 100\%  & 4.03 & 100\%  & 3.86 & 100\%  & 4.33 & 100\%  & \textbf{4.36} & 100\%  & 4.29 & 100\%  \\
+		Entertainment & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  \\
+		Factories-simple & 1.91 & 40\%  & \textbf{1.93} & 40\%  & 1.86 & 40\%  & 1.0 & 20\%  & 1.0 & 20\%  & 1.0 & 20\%  \\
+		Freecell-Learned-ECAI-16 & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  \\
+		Hiking & \textbf{2.0} & 40\%  & 1.75 & 40\%  & 1.7 & 60\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  \\
+		Logistics-Learned-ECAI-16 & 2.57 & 60\%  & \textbf{2.87} & 80\%  & 2.79 & 80\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  \\
+		Minecraft-Player & 1.73 & 40\%  & 1.7 & 40\%  & 1.62 & 40\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  \\
+		Minecraft-Regular & 3.14 & 80\%  & 3.1 & 80\%  & 2.99 & 80\%  & \textbf{3.6} & 80\%  & 3.58 & 80\%  & 3.5 & 80\%  \\
+		Monroe-Fully-Observable & 1.68 & 100\%  & 2.45 & 100\%  & 2.07 & 100\%  & 1.92 & 60\%  & 3.3 & 100\%  & \textbf{4.08} & 100\%  \\
+		Monroe-Partially-Observable & 0.93 & 20\%  & 0.0 & 0\%  & 0.82 & 20\%  & \textbf{1.0} & 20\%  & 0.0 & 0\%  & \textbf{1.0} & 20\%  \\
+		Multiarm-Blocksworld & \textbf{1.0} & 20\%  & \textbf{1.0} & 20\%  & 0.98 & 20\%  & 0.0 & 0\%  & \textbf{1.0} & 20\%  & \textbf{1.0} & 20\%  \\
+		Robot & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  & \textbf{2.0} & 40\%  \\
+		Rover-GTOHP & 3.7 & 100\%  & 3.62 & 100\%  & 3.26 & 80\%  & \textbf{4.56} & 100\%  & 4.55 & 100\%  & 4.47 & 100\%  \\
+		Satellite-GTOHP & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & \textbf{1.0} & 20\%  & 0.0 & 0\%  \\
+		Snake & 3.07 & 80\%  & 3.14 & 80\%  & 2.84 & 80\%  & 3.1 & 80\%  & \textbf{3.89} & 100\%  & 3.4 & 80\%  \\
+		Towers & 2.2 & 60\%  & 2.2 & 60\%  & 2.15 & 60\%  & \textbf{2.66} & 60\%  & 2.65 & 60\%  & 2.61 & 60\%  \\
+		Transport & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & \textbf{1.0} & 20\%  \\
+		Woodworking & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  & 0.0 & 0\%  \\
+		\hline
+		\textbf{Instances: 120} & 44.2 & 47\% & 44.0 & 47\% & 43.1 & 48\% & 43.1 & 41\% & 46.1 & 44\% & 47.4 & 45\% \\
+		\hline
+	\end{tabular}
+
+	\end{adjustbox}
+\end{table}
