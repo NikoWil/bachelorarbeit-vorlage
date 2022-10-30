@@ -99,6 +99,13 @@ both: context-free grammars can be simulated by HTN, use primitive tasks as term
 
 \subsubsection{Differences from other Kinds of Planning}
 \cite{nau2007current} creates a classification of planners into domain-specific, domain-independent and domain-configurable planners.
-They argue that HTN planning falls under domain-configurable with the decompositions providing advice to the planner to gain efficiency. \\
+They argue that HTN planning falls under domain-configurable with the decompositions providing advice to the planner to gain efficiency.
 \cite{holler2020htn} argue that HTN-planning is not simply a domain-configurable version of classical planning and argue on the basis that \cite{erol1994htn, erol1996complexity} showed that HTN-planning is strictly more powerful compared to classical planning which is PSPACE-complete. \\
 While we agree with \cite{holler2020htn}, one can still use HTN planning without using the full complexity of the model, using it instead to provide more efficient and guided versions of classical planning problems.
+
+\subsubsection{TODO: Representing HTN Problems}
+- compound tasks as rectangles
+- actions as rounded rectangles
+- reductions as arrows, compound task to the left, subtasks to the right
+- as we only use this for TOHTN instances order is implied left to right for subtasks
+- give an example

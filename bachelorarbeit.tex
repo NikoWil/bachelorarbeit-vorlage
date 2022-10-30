@@ -293,11 +293,11 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 - systematicity (\cite{holler2020htn}): for search we explore each search node at most once (Kambhampati, Knoblock, \& Yang, 1995) -> not a problem for TOHTN? check p.18 in holler2020 again
 - optimality: shortest plan (few planners, Lilotane maybe?)
 
-\include{prelim_tohtn_formalism}
-\include{prelim_tohtn_techniques}
-\include{prelim_malleability}
-\include{prelim_crowdhtn}
-\include{prelim_mallob}
+\input{prelim_tohtn_formalism}
+\input{prelim_tohtn_techniques}
+\input{prelim_malleability}
+\input{prelim_crowdhtn}
+\input{prelim_mallob}
 
 related work:
 - distributed search: hash distributed a star
@@ -311,40 +311,38 @@ related work:
 
 - not aware of any other work in malleable (TO)HTN planning
 
-\section{TOHTN Metadata}
-- researchers in TOHTN planning have collected a number of test instances for TOHTN planning
-- provide some analysis of those instances in the context of modelling TOHTN planning as graph search
-- provide a foundation to discuss the effects of changes and improvements in the crowd planning framework
+\pagebreak
+\section{Theoretical Improvements of the CrowdHTN Planner}
+In this section we will discuss improvements to the algorithms underlying CrowdHTN. We start by introducing different search algorithms in \ref{improv: search algorithms} and offer a discussion regarding their completeness. In \ref{improv: loop detection} we give an overview of loop detection mechanisms in other hierarchical planners, discuss loop detection as it was already present in CrowdHTN and present our design of a distributed loop detection mechanism based on bloom filters.
+\input{improv_search_algorithms}
+\input{improv_loop_detection}
 
-restarts:
-- how to propagate the version
-- how do new workers receive their versions
-- root controls the whole thing (lifetime of root is lifetime of job, always has maximum information/ nr of nodes)
-- independent hash functions: we change the seed with each version change
-- seed is initially distributed s.t. everyone starts with the same, change is deterministic with each version increase (later PEs can catch up)
+\pagebreak
+\section{Completeness of HTN Planning Algorithms}
+\label{improv: completeness}
+\input{improv_planner_completeness}
 
-\section{Theoretical Improvements to the Crowd Planner}
-\include{improv_search_algorithms}
-\include{improv_loop_detection}
-\include{improv_planner_completeness}
+\pagebreak
+\section{A Malleable TOHTN Planner}
+\input{malleable_tohtn}
 
-% starts new section!
-\include{malleable_tohtn}
-
+\pagebreak
 \section{Implementation}
-\include{impl_mallob_integration}
-\include{impl_crowd_improvements}
+\input{impl_mallob_integration}
+\input{impl_crowd_improvements}
 
+\pagebreak
 \section{Experimental Evaluation}
 
-\include{eval}
+\input{eval}
 
+\pagebreak
 \section{Future Work}
 
 - work stealing is extremely helpful with malleability on the integrating new PEs side of things
-- well-coordinated restarts solve a number of problems (completeness for random DFS, dealing with disappearing workers, propabilistic loop detection)
+- well-coordinated restarts solve a number of problems (completeness for random DFS, dealing with disappearing workers, probabilistic loop detection)
 
-\include{future_work}
+\input{future_work}
 
 \clearpage
 
