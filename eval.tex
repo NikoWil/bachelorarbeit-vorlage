@@ -4,12 +4,43 @@ In this section, we first describe our experimental setup concerning both the in
 \subsection{Experimental Setup}
 \label{eval: setup}
 For our performance tests we utilize the same reduced IPC 2020 benchmark as in \cite{bretl2021parallel}, also giving our planners 900 seconds per instance. \\
-The performance tests were done on a server with an Intel Xeon Gold 6138 processor with 4 sockets, 20 cores per socket and 2 threads per core clocked 2.00G Hz with around 750GB of RAM and running Ubuntu 20.04.\\
-We performed an additional test with an instrumented version of single-threaded CrowdHTN using random DFS and hash set based loop detection. The instrumentation allowed us to track information on the structure of our search graph and planner behavior, such as the prevalence of loops and search nodes created per second. This run was performed on the same set of instances as the performance test with up to 300 seconds per instance. The investigation was performed on a server with an AMD EPYC 7702 processor with 1 socket with 64 cores and 2 threads per core clocked 2.00 GHz with around 1TB of RAM and running Ubuntu 20.04. \\
+Our tests were done on two machines. The first is a server with an Intel Xeon Gold 6138 processor with 4 sockets, 20 cores per socket and 2 threads per core clocked 2.00G Hz with around 750GB of RAM and running Ubuntu 20.04. We will call it PC1. The second is a server with an AMD EPYC 7702 processor with 1 socket with 64 cores and 2 threads per core clocked 2.00 GHz with around 1TB of RAM and running Ubuntu 20.04. We will call it PC2.
+
+The performance tests were done on a server \\
+We performed an additional test with an instrumented version of single-threaded CrowdHTN using random DFS and hash set based loop detection. The instrumentation allowed us to track information on the structure of our search graph and planner behavior, such as the prevalence of loops and search nodes created per second. This run was performed on the same set of instances as the performance test with up to 300 seconds per instance. The investigation was performed on a server with an AMD EPYC 7702 processor with 1 socket with 64 cores and 2 threads per core clocked 2.00 GHz with around 1TB of RAM and running Ubuntu 20.04.
 \todo{describe machine used in malleability tests}
 
 \paragraph{Naming Scheme}
-
+As our CrowdHTN planner contains multiple configuration options, we use a succinct naming scheme to identify them in the evaluation. The name for a CrowdHTN configuration has the following structure:
+\[
+	\text{Cr}
+	\left\langle \text{CrowdHTN version} \right\rangle
+	\left\langle \# \text{of PEs} \right\rangle
+	\left\langle \text{loop detection method} \right\rangle
+	\left\langle \text{presence of restarts} \right\rangle
+\]
+A list of possible values for each category as well as their meaning is shown in table \ref{table: crowd configs}.
+\begin{table}
+	\caption{List of parameters identifying a CrowdHTN configuration}
+	\label{table: crowd configs}
+	\centering
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Parameter & Value & Meaning \\
+		\hline
+		CrowdHTN Version & O & Old CrowdHTN \\
+		 			     & N & New CrowdHTN \\
+		\hline
+		Loop Detection Method & Hs & Hash Set \\
+							  & Bl & Local Bloom Filter \\
+							  & Bg & Global Bloom Filter \\
+							  & No & No loop detection \\
+		\hline
+		Presence of Restarts & R & Time dependent restarts are used \\
+							 & / & No time dependent restarts are used \\
+		\hline
+	\end{tabular}
+\end{table}
 
 \begin{comment}
 CrowdHTN metadata
@@ -24,9 +55,53 @@ CrowdHTN metadata
 
 \subsection{Optimizations in CrowdHTN}
 \label{eval: crowd optimizations}
-- putting numbers to memory savings and how many nodes we save from instantiation (also saves our loop detection!)
-- percentage of search nodes saved by not representing search nodes beginning with an action
-- percentage of world states saved by sharing them between nodes
+In \ref{impl: reduce nodes} we described an improvement to our progression search which let us reduce the number of search nodes we instantiate. To evaluate the impact of this improvement we created an instrumented version of CrowdHTN which let us track this information during planning. We ran this version of CrowdHTN on our benchmark on PC2, using 1 PE, DFS and hash set based loop detection while giving it 300 seconds per instance. We tracked the metadata for all instances, whether a plan was found or not. In addition to the information on actions and world states, we tracked the number of search nodes which were duplicates. The results are shown in table \ref{table: tohtn metadata}. \\
+Compared to the other measures, the ratio of tasks which are actions is relatively consistent between domains. It varies from about one third to about two thirds of all tasks. The ratio is lowest for the Logistics-Learned-ECAI-16 domain at $28.2\%$ and highest for Rover-GTOHP at $66.83\%$. \\
+When it comes to shared world states, results vary more. On 11 out of the 24 test domains, a world state is on average shared by less than 10 search nodes. This is lowest for the Snake domain with only $1.4$ search nodes per world state. On the other hand for 6 out of our 24 domains more than $1000$ search nodes share one world state, going as far as $\sim3.5 \times 10^8$ search nodes per world state for the Transport domain. \\
+To sum these improvements up, our improved search node exploration is a clear benefit on all domains, reducing the number of search nodes we need to represent by at least $28\%$. Sharing world states is more mixed. While sharing is extreme on some domains, it does come at the cost of an additional pointer indirection which may be harmful on domains with little sharing. \\
+Regarding loop detection, the results are similarly varied as with state sharing. On 7 out of 24 domains no duplicate nodes were encountered at all and on another 5 domains less than 1\% of nodes were duplicates. At the other end of the spectrum we have Minecraft-Player and Logistics-Learned-ECAI-16 with $\sim30\%$ and Factories-simple with $\sim44\%$ of duplicate nodes. We will return to these numbers in the evaluation of different loop detection techniques in \ref{eval: loop detection}.
+\begin{table}
+	\caption{Metadata about progression search on our benchmark}
+	\label{table: tohtn metadata}
+	\centering
+	\begin{tabular}{|l|c|r|r|}
+		\hline
+		Domain & Action\% & State Sharing & Loop\% \\
+		\hline
+		AssemblyHierarchical & 49.71 & 4793.8 & 0.006\\
+		Barman-BDI & 33.56 & 10.4 & 4.866\\
+		Blocksworld-GTOHP & 50.80 & 6.1 & 0.000\\
+		Blocksworld-HPDDL & 49.34 & 83.4 & 1.690\\
+		Childsnack & 53.94 & 28800.6 & 0.000\\
+		Depots & 45.11 & 7.3 & 2.790\\
+		Elevator-Learned-ECAI-16 & 47.89 & 44.9 & 1.663\\
+		Entertainment & 49.49 & 7.2 & 0.095\\
+		Factories-simple & 31.09 & 2.3 & 43.815\\
+		Freecell-Learned-ECAI-16 & 44.42 & 2.5 & 0.000\\
+		Hiking & 65.24 & 2.6 & 12.508\\
+		Logistics-Learned-ECAI-16 & 28.20 & 4.7 & 30.348\\
+		Minecraft-Player & 32.21 & 4.4 & 29.896\\
+		Minecraft-Regular & 31.34 & 3.4 & 0.000\\
+		Monroe-Fully-Observable & 48.65 & 114.0 & 1.457\\
+		Monroe-Partially-Observable & 48.29 & 106.6 & 3.418\\
+		Multiarm-Blocksworld & 47.06 & 28.9 & 8.240\\
+		Robot & 50.00 & 46207.3 & 0.002\\
+		Rover-GTOHP & 66.83 & 3.5 & 0.000\\
+		Satellite-GTOHP & 34.66 & 52.5 & 0.013\\
+		Snake & 47.16 & 1.4 & 6.948\\
+		Towers & 49.99 & 5409.3 & 0.000\\
+		Transport & 36.98 & 347788104.5 & 0.000\\
+		Woodworking & 49.83 & 21708.8 & 0.442\\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Comparing to old CrowdHTN}
+- we win overall
+- we loose some coverage?!
+- specifically in Freecell-Learned-ECAI-16 we have a performance degradation
+- we win in overall IPC score
+- the hit or miss nature of CrowdHTN has increased
 
 \subsection{Search Algorithms}
 \label{eval: algorithms}
@@ -56,14 +131,86 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 	\end{tabular}
 \end{table}
 
+\subsection{Local Loop Detection}
+\label{eval: loop detection}
+- general loop detection:
+- loop hit rate
+- global loop hit rate
+- performance of hash set vs bloom filter
+
+- add runs without any loop detection to the evaluation
+- split perf comparison on domains with and without loops
+- table which gives us domain and loop percentage
+
+- as bloom filters perform best, the rest of the evaluation will focus on them
+
+\begin{figure}
+	\caption{Plotting the number of solved instances per run time for CrowdHTN comparing hash set and local bloom filter based loop detection on 32 and 64 PEs}
+	\label{figure: eval loop detection}
+	\begin{subfigure}[b]{0.5\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/final/loop_detection_below_one}
+		\caption{Instances with $< 1\%$ duplicate nodes}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.5\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/final/loop_detection_above_one}
+		\caption{Instances with $> 1\%$ duplicate nodes}
+	\end{subfigure}
+	
+	% python3 ../MA_scripts/diagrams.py -files=results_64_dfs_local_bloom_handlepanic_1.csv,results_32_dfs_local_bloom_handlepanic.csv,results_64_dfs_local_hashset_handlepanic.csv,results_32_dfs_local_hashset_handlepanic.csv -names=64-bloom,32-bloom,64-hashset,32-hashset
+\end{figure}
+
+\begin{table}
+	\caption{Coverage and IPC score while using hash set and local bloom filter based loop detection on 32 and 64 PEs}
+	\label{table: eval loop detection}
+	\centering
+	\begin{tabular}{| l | r | r |}
+		\hline
+		Configuration & Coverage & IPC Score \\
+		\hline
+		Bloom, 64 PEs		& 45.0\%	& 47.37 \\ % 54
+		Bloom, 32 PEs		& 42.5\%	& 44.24 \\ % 51
+		Hash set, 64 PEs	& 39.2\%	& 41.84 \\ % 47
+		Hash set, 32 PEs	& 35.8\%	& 38.71 \\ % 43
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Probabilistic Restarts}
+\label{eval: restarts}
+- test the probabilistic restarts
+- with 900 seconds we expect $\sum_{t=1}^{899} \frac{1}{t} \approx 7.38$ restarts per run
+
+\begin{figure}
+	\caption{Evaluating CrowdHTN with a local bloom filter with and without restarts}
+	\label{figure: restarts}
+	\centering
+	\includegraphics[width=0.5\textwidth]{images/final/restarts}
+\end{figure}
+\todo{}
+
+\subsection{Global Loop Detection}
+\label{eval: global loop}
+- test the global loop detection with restarts on 32 and 64 PEs on our full benchmark
+- 
+
 \subsection{Scalability of CrowdHTN}
 \label{eval: scalability}
 - demonstrating the scaling behavior of CrowdHTN is hard due to the hit-or-miss of random DFS in TOHTN
-	- we need an instance that is reliably solved
-	- we need an instance that takes long enough to solve to demonstrate an effect
-	- Monroe Fully Observable is such an instance
+- we need an instance that is reliably solved
+- we need an instance that takes long enough to solve to demonstrate an effect
+- Monroe Fully Observable is such an instance
 - separate test on i10pc137 (mention again what it is like, CPU etc)
 - show scaling on a nice instance
+
+\begin{figure}
+	\caption{Plotting the number of solved instances per run time for CrowdHTN using DFS and a local bloom filter on 64, 16 and 4 PEs}
+	\label{figure: eval scalability}
+	\centering
+	\includegraphics[width=0.5\textwidth]{images/final/scalability}
+	% python3 ../MA_scripts/diagrams.py -files=results_64_dfs_local_bloom.csv,results_16_dfs_local_bloom.csv,results_4_dfs_local_bloom.csv  -names=64,16,4
+\end{figure}
 
 \begin{table}
 	\caption{Evalutating CrowdHTN on 20 instances of the Monroe-Fully-Observable domain}
@@ -100,62 +247,21 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 	\end{tabular}
 \end{table}
 
-\begin{figure}
-	\caption{Plotting the number of solved instances per run time for CrowdHTN using DFS and a local bloom filter on 64, 16 and 4 PEs}
-	\label{figure: eval scalability}
-	\centering
-	\includegraphics[width=0.5\textwidth]{images/final/scalability}
-	% python3 ../MA_scripts/diagrams.py -files=results_64_dfs_local_bloom.csv,results_16_dfs_local_bloom.csv,results_4_dfs_local_bloom.csv  -names=64,16,4
-\end{figure}
-
-\subsection{Loop Detection}
-\label{eval: loop detection}
-- general loop detection:
-- loop hit rate
-- global loop hit rate
-- performance of hash set vs bloom filter
-
-- add runs without any loop detection to the evaluation
-- split perf comparison on domains with and without loops
-- table which gives us domain and loop percentage
-
-\begin{figure}
-	\caption{Plotting the number of solved instances per run time for CrowdHTN comparing hash set and local bloom filter based loop detection on 32 and 64 PEs}
-	\label{figure: eval loop detection}
-	\centering
-	\includegraphics[width=0.5\textwidth]{images/final/loop_detection}
-	% python3 ../MA_scripts/diagrams.py -files=results_64_dfs_local_bloom_handlepanic_1.csv,results_32_dfs_local_bloom_handlepanic.csv,results_64_dfs_local_hashset_handlepanic.csv,results_32_dfs_local_hashset_handlepanic.csv -names=64-bloom,32-bloom,64-hashset,32-hashset
-\end{figure}
-
-\begin{table}
-	\caption{Coverage and IPC score while using hash set and local bloom filter based loop detection on 32 and 64 PEs}
-	\label{table: eval loop detection}
-	\centering
-	\begin{tabular}{| l | r | r |}
-		\hline
-		Configuration & Coverage & IPC Score \\
-		\hline
-		Bloom, 64 PEs		& 45.0\%	& 47.37 \\ % 54
-		Bloom, 32 PEs		& 42.5\%	& 44.24 \\ % 51
-		Hash set, 64 PEs	& 39.2\%	& 41.84 \\ % 47
-		Hash set, 32 PEs	& 35.8\%	& 38.71 \\ % 43
-		\hline
-	\end{tabular}
-\end{table}
-
-\subsection{Probabilistic Restarts}
-\label{eval: restarts}
-- test the probabilistic restarts
-- with 900 seconds we expect $\sum_{t=1}^{899} \frac{1}{t} \approx 7.38$ restarts per run
-
-
-\subsection{Global Loop Detection}
-\label{eval: global loop}
-- test the global loop detection
-
 \subsection{Malleable CrowdHTN}
 \label{eval: malleable}
-- test the malleability
+- once again we need an instance which scales well
+- see previous section, Monroe-Fully-Observable gives us such instances
+- problem 11 specifically shows the behavior we are after
+- use Mallob on 32 PEs
+- give our job 60 seconds to solve
+- every 20 seconds, introduce another job with a time limit of 10 seconds which we are sure will not be solved
+- our Monroe instance oscillates between 32 and 16 PEs every 10 seconds
+- on average we have 40 PEs available
+- run test 100 times?
+- compare with 32 and 16 PEs (unhindered)
+- maybe also compare with a dummy job every 10 seconds which lasts for 5 seconds
+	- same availability of PEs but more rebalancing
+	- important regarding the way we deal with disappearing PEs, i.e., communicating the local search root to someone else
 
 \subsection{Conclusion}
 \label{eval: conclusion}

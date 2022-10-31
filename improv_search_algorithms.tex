@@ -77,6 +77,7 @@ While a grounding is already available in PANDA, CrowdHTN does not perform expli
 To counter the startup cost of the PANDA heuristic, we have devised a simpler heuristic which is cheap to precompute and can easy to use in malleable planning. The goals are to have little startup overhead and to retain the efficient evaluation at each search step. As discussed in the previous paragraphs, this limits any precomputation to the lifted instance. We hope to still find performance gains on at least some problem instances. \\
 As heuristic value, we use a lower bound on the number of reductions we still need to perform to fully resolve our list of open tasks. When computing this lower bound we ignore preconditions and effects, searching the shortest possible way through the hierarchy. We precompute this value for each task as described in algorithm \ref{algo: gbfs heuristic}. The heuristic value for each action is initialized to zero. The heuristic value for each abstract task is initially unknown. In each step we loop over all tasks $t$. For each method $m$ of task $t$ we check the heuristic value of all subtasks. The heuristic value of a method is set to the sum of the heuristic over all subtasks plus one. For each task we choose the minimum value over all corresponding methods. \\
 Once there are no more changes in the mapping of tasks to heuristic values, we stop. Any task which at this point does not have an assigned value is not resolvable at all and can be pruned. \\
+To visualize the computation of our heuristic, we provide an example TOHTN domain in figure \ref{figure: heuristic example} and table \ref{table: heuristic example} shows how the heuristic is computed on this domain. \\
 Computing the final heuristic will take at most as many iterations as there are compound tasks. To show this we look at our hierarchical planning problem as graph. The tasks and methods form the vertices. We get edges from abstract tasks to all applicable methods and from methods to all their subtasks. Actions do not have any outgoing edges. During computation, the heuristic values are initialized at the actions and propagated and update throughout the graph. As tasks and methods alternate, any cycle contains at least one method and as such propagating the heuristic through a cycle would strictly increase it. \todo{improve this?} \\
 To evaluate our heuristic while planning, we now need to look at the whole sequence of open tasks and calculate the sum of our heuristic over those tasks. While the naive approach gives us linear run time in the number of open tasks, we can stretch the computation over task instantiation and reuse parts of it to perform heuristic evaluation in
 \[
@@ -129,6 +130,33 @@ The heuristic:
 		}
 	}
 \end{algorithm}
+\begin{figure}
+	\caption{Example TOHTN domain to demonstrate our heuristic}
+	\label{figure: heuristic example}
+	\centering
+	\includegraphics[width=0.3\textwidth]{images/final/heuristic_example}
+\end{figure}
+
+\begin{table}
+	\caption{Example computation of our TOHTN heuristic for the domain in figure \ref{figure: heuristic example}. Changing values are bold.}
+	\label{table: heuristic example}
+	\centering
+	\begin{tabular}{| c | c | c | c | c |}
+		\hline
+			  	& \multicolumn{4}{|c|}{Iteration} \\
+		\hline
+		task  	& 0			& 1 			& 2 			& 3 \\
+		\hline
+		$a_1$	& \textbf{0} 	& 0				& 0				& 0 \\
+		$a_2$ 	& \textbf{0} 	& 0				& 0				& 0 \\
+		$a_3$ 	& \textbf{0} 	& 0				& 0				& 0 \\
+		$t_1$ 	&   			& 				& \textbf{3}	& 3 \\
+		$t_2$ 	&   			& \textbf{1}	& 1				& 1 \\
+		$t_3$ 	&   			& \textbf{1}	& 1				& 1 \\
+		$t_4$ 	&   			& \textbf{1}	& 1				& 1 \\
+		\hline
+	\end{tabular}
+\end{table}
 
 \paragraph{Using the new heuristic in TOHTN planning}
 With the new heuristic presented in the previous paragraph, we implemented two new search algorithms for CrowdHTN, those being a heuristic DFS and an A-star like search. \\
@@ -162,7 +190,8 @@ All of this discussion so far has assumed sequential planners. The implications 
 \begin{figure}
 	\caption{A pathological case in our new HTN heuristic}
 	\label{figure: improv heuristic pathological}
-	\includegraphics[width=0.5\textwidth]{images/prelim/improv_heuristic_pathological}
+	\centering
+	\includegraphics[width=0.2\textwidth]{images/final/heuristic_pathological}
 \end{figure}
 
 \begin{comment}

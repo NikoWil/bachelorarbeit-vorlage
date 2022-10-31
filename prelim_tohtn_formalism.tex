@@ -103,9 +103,13 @@ They argue that HTN planning falls under domain-configurable with the decomposit
 \cite{holler2020htn} argue that HTN-planning is not simply a domain-configurable version of classical planning and argue on the basis that \cite{erol1994htn, erol1996complexity} showed that HTN-planning is strictly more powerful compared to classical planning which is PSPACE-complete. \\
 While we agree with \cite{holler2020htn}, one can still use HTN planning without using the full complexity of the model, using it instead to provide more efficient and guided versions of classical planning problems.
 
-\subsubsection{TODO: Representing HTN Problems}
-- compound tasks as rectangles
-- actions as rounded rectangles
-- reductions as arrows, compound task to the left, subtasks to the right
-- as we only use this for TOHTN instances order is implied left to right for subtasks
-- give an example
+\subsubsection{Graphically Representing TOHTN Problems}
+\label{prelim: graphic tohtn}
+In the rest of this work we will sometimes represent the structure of TOHTN domains graphically. We will always use the same scheme which we explain here. In our visualization, we present the structure of a domain as a series of methods. To the left we show the compound task which can be resolved by the method, followed by the method itself on its right and followed again by the method subtasks in their fixed order. Compound tasks are always represented by green rounded squares and their name, methods by an arrow with the method name above and actions by blue rounded squares and their name.\\
+A short example is shown in figure \ref{figure: prelim tohtn example}. It consists of one method, $m_1$ which resolves task $t_1$. The subtasks of $m_1$ are $t_2$, $a_1$ and $a_2$. $t_1$ and $t_2$ are compound tasks, $a_1$ and $a_2$ are actions.
+\begin{figure}
+	\caption{An example TOHTN domain}
+	\label{figure: prelim tohtn example}
+	\centering
+	\includegraphics[width=0.7\textwidth]{images/final/domain_example}
+\end{figure}

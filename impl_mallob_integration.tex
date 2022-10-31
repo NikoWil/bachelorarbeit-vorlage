@@ -5,7 +5,7 @@ In this section we will give an overview over how we integrated CrowdHTN with Ma
 	\item Implement the Mallob job interface seen at \ref{algo - mallob interface}
 	\item Implement a way to encode a result for writing to file
 \end{itemize}
-As we discussed in section \todo{ref the proper sub thingy once it exists} on how we designed malleable CrowdHTN, we choose to communicate an instance by simply transferring the contents of the instance file, making the first step easy. The third step, encoding a result for writing, is similarly easy as CrowdHTN already contained a mechanism to write a plan to the terminal. Most of the work was done in the second step which we will now discuss in more detail. As a general principle, CrowdHTN was kept as a separate library which is linked into Mallob. The implementation of the TOHTN job within Mallob is a wrapper around this library. This allowed for a clearer separation of concerns where our job implementation does not need to know anything about the specifics of TOHTN planning while CrowdHTN is agnostic of implementation details its environment, e.g. how messages are transmitted.\\
+As we discussed in section \ref{malleable: overview} on how we designed malleable CrowdHTN, we choose to communicate an instance by simply transferring the string contents of the instance file, making the first step easy. The third step, encoding a result for writing, is similarly easy as CrowdHTN already contained a mechanism to write a plan to the terminal. Most of the work was done in the second step which we will now discuss in more detail. As a general principle, CrowdHTN was kept as a separate library which is linked into Mallob. The implementation of the TOHTN job within Mallob is a wrapper around this library. This allowed for a clearer separation of concerns where our job implementation does not need to know anything about the specifics of TOHTN planning while CrowdHTN is agnostic of implementation details its environment, e.g. how messages are transmitted.\\
 Both CrowdHTN and Mallob are implemented using the C++ programming language.
 \begin{algorithm}
 	\caption{The Mallob job interface}
@@ -68,23 +68,28 @@ The last problem is the \textit{start} call during which we need to parse our TO
 \end{comment}
 
 \paragraph{Added Fault Tolerance}
-As a scheduler, within a single execution Mallob may work on any number of jobs making it necessary that jobs do not crash. This imposes additional challenges for TOHTN planning, as we have seen in section \ref{prelim: tohtn complexity} that TOHTN planning is EXPSPACE hard, meaning we may often run out of memory and will be subsequently shut down by the operating system. Luckily, the Mallob job interface we see in algorithm \ref{algo - mallob interface} does provide a function for this case. Mallob does periodically check available memory and if it threatens to run out triggers the \textit{appl\_memoryPanic()} function. In our case we have implemented it as clearing out both our local fringe of search nodes and the loop detection information, resetting the local search. Afterwards, an affected PE will simply resume the work stealing and message other PEs to re-join the work at reduced memory footprint. While this does means we loose parts of the search space, the alternative would be to immediately return without a plan. Additionally, with the restarting mechanism we introduced in section \ref{ld - completeness} CrowdHTN retains completeness even in this case.
+As a scheduler, within a single execution Mallob may work on any number of jobs making it necessary that jobs do not crash. This imposes additional challenges for TOHTN planning, as we have seen in section \ref{prelim: tohtn complexity} that TOHTN planning is EXPSPACE-hard, meaning we may often run out of memory and will be subsequently shut down by the operating system. Luckily, the Mallob job interface we see in algorithm \ref{algo - mallob interface} does provide a function for this case. Mallob does periodically check available memory and if it threatens to run out triggers the \textit{appl\_memoryPanic()} function. In our case we have implemented it as clearing out both our local fringe of search nodes and the loop detection information, resetting the local search. Afterwards, an affected PE will simply resume the work stealing and message other PEs to re-join the work at reduced memory footprint. While this does means we loose parts of the search space, the alternative would be to immediately return without a plan. Additionally, with the restarting mechanism we introduced in section \ref{ld - completeness} CrowdHTN retains completeness even in this case.
 
-\paragraph{TODO: Messages by dead workers}
+\paragraph{Messages and dying workers}
 \label{impl: malleable messages}
+In \ref{malleable: messages} we explained why we can no longer assume that messages will always be delivered and how Mallob implements a return messages mechanism to catch this. Now we will cover in detail how we respond to each kind of return message. Afterwards we will look at more complicated cases of workers dying and reappearing and show how they do not affect correctness of our planner \\
+In malleable CrowdHTN, workers directly exchange three kinds of messages. These are \textit{work requests}, \textit{work packages}, i.e. a positive answer to a \textit{work request}, and \textit{negative answers}, i.e. the worker receiving the \textit{work request} does not have any work to share.
+Getting a returned \textit{work request} is equivalent to receiving a \textit{negative answer}. We treat it the same way and the worker sends out another \textit{work request} to a random other worker. When we receive a returned \textit{work package}, we re-add it to the back of our local fringe. This ensures that no information is lost. If multiple \textit{work packages} are returned to a worker, their order at the back of the fringe may change. We do not expect any significant impact from this, as the number of \textit{work packages} which are in flight is limited by the number of PEs overall which is extremely low compared to the number of search nodes in a hierarchical planning problem. This leaves a returned \textit{negative answer} as the last type to handle. We can simply ignore this type of return message. \\
+Return messages are only one case of dying workers affecting our communication. In addition to this, a worker may die, be terminated and the PE is then, through rebalancing, reassigned to the same job. Any messages meant for the original worker will be received by the new worker, as it belongs to the same job. For \textit{work requests} this is not a problem, the new worker will respond like any other. Receiving \textit{work packages} and \textit{negative answers} will change our behavior. If the worker sent out a \textit{work request} before receiving the \textit{work package} meant for the previous worker, it may end up receiving two \textit{work packages}. Similarly, receiving a \textit{negative answer} while the worker has a \textit{work request} on the way prompts the worker to send out an additional \textit{work request}. In both cases, we integrate any additional \textit{work packages} into the local fringe to not cut off parts of the search space and keep working. 
+\begin{comment}
 - how to handle return messages
-	- four types:
-		- request: treat as negative response
-		- work package: re-integrate
-		- negative response: ignore
+- four types:
+- request: treat as negative response
+- work package: re-integrate
+- negative response: ignore
 - how to handle messages addressed to other workers
-	- request: simply respond
-	- work package: integrate into local fringe
-	- negative response:
-		- if we already have an active request, we will think it failed and send out a second one
-		- worst case: if we get messages for $n$ previous workers, we may have $n$ work requests and get nodes accordingly
-			- gives us more than we expected but nothing is lost, simply increases our local fringe
-\todo{fill this}
+- request: simply respond
+- work package: integrate into local fringe
+- negative response:
+- if we already have an active request, we will think it failed and send out a second one
+- worst case: if we get messages for $n$ previous workers, we may have $n$ work requests and get nodes accordingly
+- gives us more than we expected but nothing is lost, simply increases our local fringe
+\end{comment}
 
 \subsection{Efficiently Handling Version Increases}
 In our malleable CrowdHTN implementation, version increases show up in a number of ways. They are necessitated by the global loop detection introduced in section \ref{improv: loop detection} and further allow our DFS based planner to achieve completeness as explained in section \ref{improv: completeness}. Due to the distributed fashion in which CrowdHTN operates, version updates are not perfectly synchronized and workers may be at different versions. We will now outline how correctness is ensured and how versions are propagated efficiently. \\
