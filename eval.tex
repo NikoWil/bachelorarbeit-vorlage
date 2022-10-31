@@ -255,19 +255,35 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 
 \subsection{Malleable CrowdHTN}
 \label{eval: malleable}
-- once again we need an instance which scales well
-- see previous section, Monroe-Fully-Observable gives us such instances
-- problem 11 specifically shows the behavior we are after
-- use Mallob on 32 PEs
-- give our job 60 seconds to solve
-- every 20 seconds, introduce another job with a time limit of 10 seconds which we are sure will not be solved
-- our Monroe instance oscillates between 32 and 16 PEs every 10 seconds
-- on average we have 40 PEs available
-- run test 100 times?
-- compare with 32 and 16 PEs (unhindered)
-- maybe also compare with a dummy job every 10 seconds which lasts for 5 seconds
-	- same availability of PEs but more rebalancing
-	- important regarding the way we deal with disappearing PEs, i.e., communicating the local search root to someone else
+To test the behavior of CrowdHTN under malleable conditions, we want to again focus on a problem instance which shows good scalability. In the previous discussion on CrowdHTN scalability we focused on the Monroe-Fully-Observable domain. We will continue using this domain, specifically problem 11. We performed our test using 32 PEs and trying to solve the instance 100 times. Our job on problem 11, which we will call the main job, had priority 1 and a wallclock time limit of 90 seconds. Every 20 seconds we injected an unsolvable job with priority 1 and a wallclock time limit of 10 seconds. This means the main job oscillates every 10 seconds from having 32 to having 16 PEs available and back. We compare both the coverage and the average run time of those instances with moldable CrowdHTN using 16, 24 and 32 PEs. The results are listed in table \ref{table: malleability}. Figure \ref{figure: malleability} shows a box plot of run times per solver. \\
+- the tail of the run times is lost
+- we expect 4 restarts by 30 seconds
+- we expect only one more by the time 90 seconds have passed
+- there seems to be some loss as the number of PEs is reduced and increases again
+- 
+
+\begin{table}
+	\caption{Coverage and average run time of malleable and moldable CrowdHTN}
+	\label{table: malleability}
+	\centering
+	
+	\begin{tabular}{|l|c|c|}
+		\hline
+		Configuration & Coverage & Average run time \\
+		\hline
+		Malleable, average 24 PEs	& 66\%	& 28.98 \\
+		Moldable 16 PEs				& & \\
+		Moldable 24 PEs				& 97\% & 36.62 \\
+		Moldable 32 PEs				& & \\
+		\hline
+	\end{tabular}
+\end{table}
+\begin{figure}
+	\caption{Distribution of solving times for malleable and moldable CrowdHTN}
+	\label{figure: malleability}
+	\centering
+	\includegraphics[width=0.5\textwidth]{images/final/malleability}
+\end{figure}
 
 \subsection{Conclusion}
 \label{eval: conclusion}

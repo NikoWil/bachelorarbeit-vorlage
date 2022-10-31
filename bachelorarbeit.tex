@@ -233,7 +233,11 @@ I'm blind text. From birth. It took a long time until I realized what it means t
 \vspace*{0pt}\vfill
 
 \section*{Danksagungen}
-
+\todo{Finish!}
+Thanks to my advisor, Dominik Schreiber
+- ready to help me 
+- the many facilities of Mallob 
+Additional thanks to my friends and flatmates who helped keep me grounded during this work.
 Thanks to i10pc135 which suffered much to make the experimental evaluation possible.
 
 \vfill\vfill\vfill
@@ -262,8 +266,37 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Introduction}
+- why is TOHTN great
+- let's improve on parallel TOHTN
+
+- hierarchical planning is popular
+- domain-independent automated planning
+- decompose a set of initial tasks until they have been decomposed to the level of simple actions
+- these actions form a plan which achieve the initial tasks
+- TOHTN planning is a sub-problem of HTN planning where all tasks are constrained by a total order
+
+- hierarchical planners are easy to use
+- hierarchy allows the user to insert structure into the problem and advise the planner
+- hierarchical planning is used in a number of domains
+	- \cite{munoz2004role} real-time strategy games\\
+	- \cite{ontanon2015adversarial} improve minimax game tree search in RTS, reduce branching factor
+	- \cite{lin2020htn} also takes the opponent's strategy into account
+	
+	- \cite{sirin2004htn} web service composition
+	- \cite{georgievski2017cloud} cloud application composition
+	
+	- \cite{gonzalez2017three} socially assistive robotics
+	- \cite{padia2018yarn} storyline visualizations
+	- \cite{mohr2018ml} automated machine learning
+
+Malleability is the ability of a parallel job to efficiently integrate new PEs into a parallel job at run time as well as handle a reduction of the available PEs \cite{feitelson1997job}. Malleable programs are well-liked by administrators of supercomputers, as they allow the utilization of all compute resources, maintaining both high throughput and keeping latencies for new jobs low \cite{feitelson1997job, hungershofer2004combined}. The malleable model does pose additional challenges for application programmers, though and malleable jobs are only easy to implement if we restrict our problems to those which split into small, independent work packages \cite{feitelson1997job, tucker1989process} and few malleable applications exist. 
+However, in recent years a number of malleable SAT solvers have emerged. Among those Mallob \cite{sanders2022decentralized} and Paracooba \cite{heisinger2020distributed}. This is of special importance as SAT serves as a building in many other applications such as hierarchical planning. Having malleable SAT solvers available may allow for other applications to profit from this paradigm while being presented a simple to use interface. \\
+
+- we present improvements on parallel TOHTN planner CrowdHTN such as restarts and distributed detection of duplicate states
+- we show that detection of duplicate states increases performance but is fundamentally limited and unable to help a planner achieve completeness
+- 
+
 \subsection{Motivation}
-\todo{quote the malleability paper on how great the feature is}
 
 \subsection{Research Goal}
 - Provide a performant parallel TOHTN planner by improving upon the Crowd planner
@@ -274,10 +307,11 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 - Compare performance of parallel to malleable TOHTN planning
 
 \subsection{Thesis Overview}
-- preliminaries
+- explain TOHTN planning and malleability in more detail
+	- introduce both parallel TOHTN planner CrowdHTN which we improve in this work
+	- and the malleable load balancer and SAT solver Mallob
 
-- algorithmic improvements to CrowdHTN
-	- explore 
+- 
 
 \paragraph{Terminology}
 - PE: parallel unit in general
@@ -286,8 +320,6 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 - Mallob assigns a number of PEs to a job running a worker on each one
 
 \section{Preliminaries}
-
-\subsection{Planner Properties}
 - soundness: all solutions we find are correct
 - completeness: we always find a plan if it exists
 - correctness: kinda obvious
@@ -297,21 +329,10 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 \input{prelim_tohtn_formalism}
 \input{prelim_tohtn_techniques}
 \input{prelim_malleability}
+\input{parallel_distributed}
 \input{prelim_crowdhtn}
 \input{prelim_mallob}
-
-related work:
-- distributed search: hash distributed a star
-
-- paracooba as malleable SAT solver
-- mallob as malleable SAT solver
-
-- parallel planners: SHIP, Crowd, Mallotane (Lilotane + Mallob, limited as only the SAT solving is malleable)
-- in the wider sense: applications that internally rely on SAT
-- few malleable applications exist as it puts a strain on developers
-
-- not aware of any other work in malleable (TO)HTN planning
-
+\clearpage
 \pagebreak
 \section{Theoretical Improvements of the CrowdHTN Planner}
 In this section we will discuss improvements to the algorithms underlying CrowdHTN. We start by introducing different search algorithms in \ref{improv: search algorithms} and offer a discussion regarding their completeness. In \ref{improv: loop detection} we give an overview of loop detection mechanisms in other hierarchical planners, discuss loop detection as it was already present in CrowdHTN and present our design of a distributed loop detection mechanism based on bloom filters.

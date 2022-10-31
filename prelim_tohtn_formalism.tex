@@ -1,12 +1,9 @@
 \subsection{TOHTN Formalism}
-In this section we first define what HTN and TOHTN problems are from a formal perspective \ref{prelim: tohtn problems}. Afterwards we take a short look at the algorithmic worst case complexity of HTN and TOHTN planning \ref{prelim: tohtn complexity}.
+In this section we first define what HTN and TOHTN problems are from a formal perspective \ref{prelim: tohtn problems}. Afterwards we take a short look at the algorithmic worst case complexity of HTN and TOHTN planning \ref{prelim: tohtn complexity}. We conclude by taking a short look at how hierarchical and classical planning compare in \ref{prelim: planning differences} and present the way in which we visualize hierarchical problems in this work in \ref{prelim: graphic tohtn}.
 
 \subsubsection{Defining TOHTN Planning Problems}
 \label{prelim: tohtn problems}
-Both HTN and TOHTN planning are based on the idea of decomposing a list of initial tasks down into smaller subtasks until those subtasks can be achieved by simple actions.
-
-\todo{quote more formalisms}
-Multiple definitions for HTN planning exist. In this work we build on the definition introduced in \cite{georgievski2015htn}.
+Both HTN and TOHTN planning are based of decomposing a list of initial tasks down into smaller subtasks until those subtasks can be achieved by simple actions. A number of formalisms for HTN plannings exist \cite{georgievski2015htn, behnke2018tracking, schreiber2021lilotane}. These formalisms are similar but differ slightly to suit specific planning approaches. In this work, we will reuse the formalism we introduced in \cite{bretl2021parallel} which is built on the definition by \cite{georgievski2015htn}.
 
 \begin{definition} % predicate
 	A \textbf{predicate} consists of two parts. Firstly a predicate symbol $p \in \mathcal{P}$ where $\mathcal{P}$ is the finite set of predicate symbols. Secondly of a list of terms $\tau_1, \ldots, \tau_k$ where each term $\tau_i$ is either a constant symbol $c \in \mathcal{C}$, with $\mathcal{C}$ being the finite set of constant symbols, or a variable symbol $v \in \mathcal{V}$, where $\mathcal{V}$ is the infinite set of variable symbols. \\
@@ -70,7 +67,6 @@ Early on it was shown by \cite{erol1994htn} and \cite{erol1996complexity} that t
 We can see what D-EXPTIME means in practise when we consider the maximum size of a task network we need to consider. From \cite{behnke2018totsat} we know that if a solution to an HTN instance exists, it can be found within a maximum depth of $|T_c| \cdot(2 ^{|\mathcal{Q}|})^2$. Similarly, we see that a task network can have exponential width in it's depth. Consider for this an instance constructed such that each compound task has exactly two children and where primitive tasks are only occuring at the bottom most layer. Now each layer will be twice as wide as the one before, giving us exponential width. \\
 Regarding the general relationship of hierarchical planning to complexity theory, \cite{erol1994htn} and \cite{erol1996complexity} showed early on that HTN instances can be used to simulate context-free languages. This was extended by \cite{holler2014language} who showed that TOHTN instances correspond exactly to context-free grammars. \\
 In addition to planning itself, the problem of plan verification was studied. Here, \cite{behnke2015complexity} showed that plan verification is NP-complete, even under the assumption that not only the plan but also the decompositions leading to it are provided.
-
 \begin{comment}
 \cite{erol1994htn}
 - complexity depends on
@@ -95,9 +91,8 @@ both: context-free grammars can be simulated by HTN, use primitive tasks as term
 - this even holds if the list of decompositions is provided
 \end{comment}
 
-\todo{\cite{behnke2019finding} mentions 4 ways to compute upper bounds on the task network size?}
-
 \subsubsection{Differences from other Kinds of Planning}
+\label{prelim: planning differences}
 \cite{nau2007current} creates a classification of planners into domain-specific, domain-independent and domain-configurable planners.
 They argue that HTN planning falls under domain-configurable with the decompositions providing advice to the planner to gain efficiency.
 \cite{holler2020htn} argue that HTN-planning is not simply a domain-configurable version of classical planning and argue on the basis that \cite{erol1994htn, erol1996complexity} showed that HTN-planning is strictly more powerful compared to classical planning which is PSPACE-complete. \\

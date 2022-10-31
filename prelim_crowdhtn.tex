@@ -1,8 +1,8 @@
 \subsection{The CrowdHTN Planner}
 \label{prelim: crowdhtn}
-The CrowdHTN (Cooperative randomized work stealing for Distributed HTN) planner is implemented as a parallel state machine that uses work stealing for work balancing purposes. According to the definition of \cite{feitelson1997job} we introduced in section \ref{prelim: malleability}, CrowdHTN is a moldable task, as the number of workers is arbitrary but fixed during execution. \\
+The CrowdHTN (Cooperative randomized work stealing for Distributed HTN) planner was introduced in our previous work on parallel and distributed TOHTN planning \cite{bretl2021parallel}. It is implemented as a parallel state machine that uses work stealing for load balancing. According to the definition of \cite{feitelson1997job} we introduced in section \ref{prelim: malleability}, CrowdHTN is a moldable program, as the number of workers is arbitrary but fixed during execution. \\
 Each local worker of CrowdHTN owns it's own queue of search nodes, tuples of \textit{open tasks} and \textit{world state} and performs progression search on these nodes as explained in section \ref{prelim: techniques search}. The basic CrowdHTN parallel search algorithm is shown in algorithm \ref{crowd: parallel algo}. \\
-In the initial state, only the root worker has any search nodes. All other workers start empty. To perform load balancing, randomized work stealing is used \todo{get a citation}. The work package exchange is implemented as a three step protocol
+In the initial state, only the root worker has any search nodes. All other workers start empty. To perform load balancing, randomized work stealing is used. The work package exchange is implemented as a three step protocol
 \begin{enumerate}
 	\item work request
 	\item response
@@ -49,5 +49,3 @@ The specifics of which node to explore for a work step and which node to split o
 		}	
 	}
 \end{algorithm}
-
-\todo{Show that CrowdHTN with loop detection is complete? But *is* Crowd complete?}
