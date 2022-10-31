@@ -3,12 +3,31 @@ In this section, we first describe our experimental setup concerning both the in
 
 \subsection{Experimental Setup}
 \label{eval: setup}
-For our performance tests we utilize the same reduced IPC 2020 benchmark as in \cite{bretl2021parallel}, also giving our planners 900 seconds per instance. \\
-Our tests were done on two machines. The first is a server with an Intel Xeon Gold 6138 processor with 4 sockets, 20 cores per socket and 2 threads per core clocked 2.00G Hz with around 750GB of RAM and running Ubuntu 20.04. We will call it PC1. The second is a server with an AMD EPYC 7702 processor with 1 socket with 64 cores and 2 threads per core clocked 2.00 GHz with around 1TB of RAM and running Ubuntu 20.04. We will call it PC2.
+- we reuse the reduced IPC benchmark set which we previously presented in \cite{bretl2021parallel}
 
-The performance tests were done on a server \\
-We performed an additional test with an instrumented version of single-threaded CrowdHTN using random DFS and hash set based loop detection. The instrumentation allowed us to track information on the structure of our search graph and planner behavior, such as the prevalence of loops and search nodes created per second. This run was performed on the same set of instances as the performance test with up to 300 seconds per instance. The investigation was performed on a server with an AMD EPYC 7702 processor with 1 socket with 64 cores and 2 threads per core clocked 2.00 GHz with around 1TB of RAM and running Ubuntu 20.04.
-\todo{describe machine used in malleability tests}
+- IPC 2020 came with many TOHTN planning domains with different characteristics
+- these domains have increasingly found use as a standard benchmark TOHTN planning
+- 24 domains, 892 instances
+- \cite{schreiber2021lilotane}, \cite{holler2020htn}, \cite{holler2021landmark}
+\todo{check holler, behnke for newer releases?}
+- running all configurations of our planner on all 892 problems at 30 minutes each would have been infeasible
+- we found out that problem size is correlated with difficulty within the domain (using the best planner per instance)
+- we use this to utilize a reduced instance set, of 5 instances per domain which we used for the original CrowdHTN, SHiP and Mallotane
+- we run our planners with 900 seconds per instance
+
+- we define the run time of a planner as follows:
+	- from start until a plan is printed for standalone planners
+	- the wallclock time measured by Mallob for our malleable CrowdHTN 
+
+
+For our performance tests we utilize the same reduced IPC 2020 benchmark as in \cite{bretl2021parallel}, also giving our planners 900 seconds per instance. \\
+Planners are scored according to both the IPC score and coverage. The IPC score is defined as follows
+\[
+1 - \frac{log(t)}{log(T)}
+\]
+where $t$ is the runtime of our planner 
+\\
+Our tests were done on two machines. The first is a server with an Intel Xeon Gold 6138 processor with 4 sockets, 20 cores per socket and 2 threads per core clocked 2.00G Hz with around 750GB of RAM and running Ubuntu 20.04. We will call it PC1. The second is a server with an AMD EPYC 7702 processor with 1 socket with 64 cores and 2 threads per core clocked 2.00 GHz with around 1TB of RAM and running Ubuntu 20.04. We will call it PC2.
 
 \paragraph{Naming Scheme}
 As our CrowdHTN planner contains multiple configuration options, we use a succinct naming scheme to identify them in the evaluation. The name for a CrowdHTN configuration has the following structure:

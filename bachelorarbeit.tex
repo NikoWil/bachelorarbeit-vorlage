@@ -299,16 +299,13 @@ However, in recent years a number of malleable SAT solvers have emerged. Among t
 
 In this thesis, we present three main advances in parallel and malleable TOHTN planning. \\
 Firstly, we present a number of improvements for the parallel search-based planner CrowdHTN.
-Both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} have shown the importance of detecting duplicate search nodes to improve the performance of hierarchical planners. PANDA specifically uses an approach based on hashing which may fall back to full node comparisons to avoid false positives. Parallel planner CrowdHTN already includes a loop detection mechanism based on the ideas of PANDA \cite{bretl2021parallel}. We take the idea of PANDA to only compare hashes and not full nodes and generalize it to bloom filters which may use any number $k$ of hash functions to reduce false positive rates. Bloom filters then allow us to present a design for a distributed loop detection mechanism. Additionally, PANDA has shown that heuristics can greatly increase the performance of search-based planner \cite{holler2020htn}. We try to adapt heuristic search for CrowdHTN while under the added constraints of malleability. Doing so, we implement BFS, heuristic DFS and A-star in CrowdHTN. 
+Both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} have shown the importance of detecting duplicate search nodes to improve the performance of hierarchical planners. PANDA specifically uses an approach based on hashing which may fall back to full node comparisons to avoid false positives. Parallel planner CrowdHTN already includes a loop detection mechanism based on the ideas of PANDA \cite{bretl2021parallel}. We take the idea of PANDA to only compare hashes and not full nodes and generalize it to bloom filters which may use any number $k$ of hash functions to reduce false positive rates. Bloom filters then allow us to present a design for a distributed loop detection mechanism. Additionally, PANDA has shown that heuristics can greatly increase the performance of search-based planner \cite{holler2020htn}. We try to adapt heuristic search for CrowdHTN while under the added constraints of malleability. Doing so, we implement BFS, heuristic DFS and A-star in CrowdHTN.
+Last, we take inspiration from SAT where restarts have been used since the 90's \cite{crawford1994experimental} to design a restarting scheme for CrowdHTN which allows it to be complete even as bloom filter based detection of duplicate nodes may lead to false positives. \\
 
-- introduce restarts
-	- have been used in SAT with great success \todo{CITATIONS!}
-	- show that they can make a planner complete even if false positives do occur
-- talk about search algorithms
-	- try to design a heuristic for distributed malleable planning\\
 Second, we provide a general overview of the completeness of different TOHTN planning approaches. We show that both search-based planners using BFS, A-star and current SAT-based planners are complete. In addition we argue that heuristic best-first search may always be incomplete and that, while current loop detection mechanisms are helpful for planner performance, there are cases of recursion in hierarchical planning problems which they are unable to detect. Lastly, we show that our restart mechanism brings random DFS into the list of algorithms which are complete on all problems. \\
 Third, we present our design of a malleable TOHTN planner. In this we integrate our planner CrowdHTN with the malleable job scheduler Mallob. We offer an overview of our design and show how work stealing in general can be adapted to a malleable framework while preserving completeness of the search. Doing so we also show Mallob's capabilities as a general purpose job scheduler and load balancer.\\
-In our evaluation we find that using Mallob as a job scheduler has negligible overhead and we manage to improve both the overall performance of CrowdHTN. Bloom filters specifically show that 
+In our evaluation we find that bloom filters offer higher performance than hash set based duplicate detection.
+
 
 - findings:
 	- Mallob has negligible overhead
@@ -316,6 +313,9 @@ In our evaluation we find that using Mallob as a job scheduler has negligible ov
 	- bloom filters present a clear improvement over hash sets, even without distributed use
 	
 	- malleability is a challenge?
+
+- do we get scaling through restarts for few nodes?
+	
 \clearpage
 \pagebreak
 \section{Preliminaries}
@@ -326,10 +326,10 @@ In our evaluation we find that using Mallob as a job scheduler has negligible ov
 \input{parallel_distributed}
 \input{prelim_crowdhtn}
 \input{prelim_mallob}
+
 \clearpage
 \pagebreak
 \section{Theoretical Improvements of the CrowdHTN Planner}
-In this section we will discuss improvements to the algorithms underlying CrowdHTN. We start by introducing different search algorithms in \ref{improv: search algorithms} and offer a discussion regarding their completeness. In \ref{improv: loop detection} we give an overview of loop detection mechanisms in other hierarchical planners, discuss loop detection as it was already present in CrowdHTN and present our design of a distributed loop detection mechanism based on bloom filters.
 \input{improv_search_algorithms}
 \input{improv_loop_detection}
 

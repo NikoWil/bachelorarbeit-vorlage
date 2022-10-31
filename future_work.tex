@@ -12,9 +12,10 @@
 - both these approaches are structurally different and could thus be used to compliment each other
 - whether the better pruning would offset the increased runtime cost remains to be seen
 
-\subsection{Advances runtime pruning techniques}
-In section \ref{improv: loops and completeness} we saw the problems with current loop detection techniques regarding (TO)HTN planner completeness. Specifically, loop detection in heuristic progression search suffers from recursive tasks which introduce additional new tasks which have to be resolved after the recursive task itself. At the same time, the PANDA planner has shown that heuristic progression search with loop detection is a promising approach with state of the art performance \cite{holler2020htn}, \cite{holler2021loop}. As a result, we propose that we take the notion of loop detection and expand it to a more generalized definition of dynamic pruning. In the past we were restricted to filtering out search nodes that are duplicates and as such already known. For future research, we could instead look at tasks sets and see whether they are still feasibly performing productive work. As an example take a task $t$ which recursively resolves into two new instances of $t$. Additionally, let $\mathcal{Q}_t$ be the set of predicates which may be changed as a result of resolving $t$. Then any sequence of $t$ which has length at least $2^{\mathcal{Q}_t}$ will necessarily perform duplicate work and any resolution which leads to an even longer sequence of $t$ needs not be explored. \\
-In this way, using improved dynamic pruning of unproductive task sequences may allow us to build planners which are both complete while at the same time realizing the performance gains seen in heuristic progression search.
+\subsection{Advanced Dynamic Pruning}
+In section \ref{improv: completeness} we show that the current state of the art in loop detection can detect some but not all cases of recursion as it is present in hierarchical planning problems. We further show that this not only negatively affects the performance of our planners but may make planners based on heuristic DFS incomplete. \\
+To deal with such cases, we could take the idea of detecting duplicate search nodes and generalize it into a notion of dynamic pruning of uninteresting nodes. Uninteresting here means that exploring this node will give us no new information about our planning problem. A duplicate search node is uninteresting as we have explored it before, obtaining all information that is available. However, a search node may also be uninteresting if it's open tasks is built such that we are guaranteed to perform unnecessary work when exploring it. Such a set of open tasks may contain a sequence of $k$ times task $t$, where the resolution of $t$ may only create actions and more instances of $t$ and affect at most $l$ predicates. If $k > 2^l$, then extending this sequence by more instances of $t$ is of no benefit. We could only create more instances of $t$ and resolving all open $t$ via actions would lead us through duplicate world states, performing unnecessary work. \\
+More research would need to be put into detecting such cases to perform more intelligent pruning of search nodes. If done successfully, heuristic DFS may regain completeness if combined with this new scheme.
 \begin{comment}
 - some planners are known to not be complete
 - some planners can easily be shown to be complete
@@ -50,7 +51,17 @@ In this way, using improved dynamic pruning of unproductive task sequences may a
 - more intelligent heuristics are probably helpful
 - we are interested in search nodes often reached, less in recursive tasks (can be resolved locally)
 
+- how about we insert nodes once we backtrack past it
+	- this information may even be kept through restarts
+	- would necessitate us to keep old search nodes around and re-engineer our planner
+
 \subsection{Intelligent Restarts}
+In both \ref{ld - completeness} and \ref{improv: completeness} we argue for the use of probabilistic restarts to guarantee the completeness of CrowdHTN. We perform restarts with probability $\frac{1}{t}$ at second $t$. This is only one of the possible ways to use restarts in hierarchical planning. \\
+At the same time, restarts and restarting strategies to increase solver performance have played a role in SAT solving since the 1990s.
+\cite{langley1992systematic} suggested the use of iterative sampling in AI planning systems, repeatedly exploring random paths up to a depth limit and restarting if no solution was found. Their work was adapted by \cite{crawford1994experimental} who employed the iterative sampling strategy for SAT solving.
+
+In SAT solving, restarts have long been an important part of solvers to increase their performance.
+
 - we perform restarts according to the harmonic series
 - SAT solving already knows restarts, explore inner-outer and luby sequence for potentially better performance
 
@@ -62,5 +73,8 @@ In this way, using improved dynamic pruning of unproductive task sequences may a
 	- frequent restarts may help in learning
 	- long times may be needed to find solutions
 	- show that luby is quite good
+	- different restart policies:
+		- static: uniform, geometric, luby
+		- dynamic: agility - prohibit restart depending on status, 
 - \cite{luby1993optimal} propose the luby sequence as a strategy
 - \cite{huang2007effect} use luby sequence in SAT
