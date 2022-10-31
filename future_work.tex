@@ -53,3 +53,14 @@ In this way, using improved dynamic pruning of unproductive task sequences may a
 \subsection{Intelligent Restarts}
 - we perform restarts according to the harmonic series
 - SAT solving already knows restarts, explore inner-outer and luby sequence for potentially better performance
+
+- \cite{langley1992systematic} suggests iterative sampling as an extreme form of restarts
+- \cite{crawford1994experimental} uses restarts via iterative sampling for SAT solving
+- \cite{gomes1998boosting} use restarts in planning, argue their use in combinatorial search
+- \cite{biere2015evaluating}
+	- optimal restart points may be unknown
+	- frequent restarts may help in learning
+	- long times may be needed to find solutions
+	- show that luby is quite good
+- \cite{luby1993optimal} propose the luby sequence as a strategy
+- \cite{huang2007effect} use luby sequence in SAT

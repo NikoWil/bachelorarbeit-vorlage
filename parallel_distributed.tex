@@ -1,24 +1,32 @@
 \subsection{Parallel and Distributed Computing Techniques}
-- parallel and distributed computing has been investigated for many years
-- also in fields related to hierarchical planning
-- 
-- we will revisit our overview on parallel graph search and parallel planning as introduced in \cite{bretl2021parallel}
-- we expand by giving a short overview over parallel hierarchical planning from \cite{bretl2021parallel}
+Parallel and distributed computing techniques have been investigated for many years. While there has been little work on parallel hierarchical planning, fields adjacent to it have long been studied. In this section we will revisit our discussion on parallel graph search from \cite{bretl2021parallel} before extending it with a short summary of our previous work in parallel hierarchical planning.
 
 \subsubsection{Parallel Graph Search}
+Many hierarchical planners such as HyperTensioN \cite{magnaguagno2020hypertension}, PANDA \cite{holler2020htn} and our own planner CrowdHTN \cite{bretl2021parallel} are based on some form of DFS. Parallel DFS has been a target for researchers for over 35 years \cite{rao1987parallel, kumar1987parallel}. In hierarchical planning specifically, our graph is often so large as to be only implicitly defined. Load balancing under these conditions has been investigated by \cite{sanders1997lastverteilungsalgorithmen}. Load balancing is important, as parallelizing search may introduce new overheads. These overheads can be classified according to \cite{fukunaga2018parallel}.
+\begin{itemize}
+	\item Search overhead
+	\item Synchronization overhead
+	\item Communication overhead
+\end{itemize}
+Search overhead happens if a parallel search algorithm has to explore more nodes than it's sequential counterpart to find a goal. Synchronization overhead is what occurs when processors are idling, waiting for others to catch up and reach a synchronization point. Communication overhead is characterized by the time spent on communication. There are two main approaches to load balancing in parallel search. These are work sharing and work stealing. During work sharing, a PE with work actively distributes it to other PEs.
+\todo{hash distributed A-star?}
+When using work stealing, the responsibility instead lies with those PEs which do not have any work available. They subsequently search out PEs with work available and "steal" some of it. It was shown that work stealing has less communication overhead than work sharing \cite{blumofe1999scheduling}. \\
+In graph search a work package can be identified as a graph node as well as the attached subgraph. In hierarchical planning, a search node is identified by the set of open tasks and the world state. While the world state is bound in size, the set of open tasks may be arbitrarily large. As a result, avoiding communication overhead is a priority and CrowdHTN utilizes a work stealing approach. \\
+In addition to this, \cite{fukunaga2018parallel} have shown that work stealing performance may degrade when duplicate search nodes may be encountered. This is important, as \cite{holler2021loop} have shown that duplicates play an important role in search-based hierarchical planning.
+\begin{comment}
 - many hierarchical planners such as HyperTensioN \cite{magnaguagno2020hypertension}, PANDA \cite{holler2020htn} and our own planner CrowdHTN \cite{bretl2021parallel} are based on some form of DFS
 - parallel DFS has been investigated for over 30 years \cite{rao1987parallel, kumar1987parallel}
 - in hierarchical planning our graph is often so large as to be only implicitly defined
 - load balancing under these conditions was investigated by \cite{sanders1997lastverteilungsalgorithmen}
 
 - load balancing is important, parallelism can lead to overhead \cite{fukunaga2018parallel}
-	- search overhead: parallel implementation expands more nodes than a sequential one
-	- synchronization overhead: processors are waiting for synchronization points
-	- communication overhead: time spent on communication
+- search overhead: parallel implementation expands more nodes than a sequential one
+- synchronization overhead: processors are waiting for synchronization points
+- communication overhead: time spent on communication
 - work sharing:
-	- processors with work actively distribute it to processors without work
+- processors with work actively distribute it to processors without work
 - work stealing:
-	- processors without work "steal" work from processors with work
+- processors without work "steal" work from processors with work
 - important: where do you get work from/ give it to? Randomization!
 - work stealing has less communication overhead than work sharing \cite{blumofe1999scheduling}
 
@@ -27,6 +35,7 @@
 - our own planner CrowdHTN uses work randomized stealing
 - work stealing performance may degrade where duplicate states play a role \cite{fukunaga2018parallel}
 - \cite{holler2021loop} shows duplicates are important in TOHTN planning
+\end{comment}
 
 \subsubsection{Parallel Hierarchical Planning}
 We already investigated parallel, moldable hierarchical planning before \cite{bretl2021parallel}. In our previous work, we created and evaluated three different planners:
@@ -35,6 +44,6 @@ We already investigated parallel, moldable hierarchical planning before \cite{br
 	\item Mallotane, an integration of Lilotane and Mallob
 	\item CrowdHTN, a search-based planner
 \end{itemize}
-Out of these three, SHiP performed overall best. As a portfolio planner, it is however limited by the number sequential planners with sufficiently different planning characteristics. It's performance only scales meaningfully for up to four cores. Second, we have Mallotane. Here we took the sequential SAT-based planner Lilotane and integrated it with Mallob as a SAT backend. This allowed us to parallelize the SAT solving part of Lilotane's planning. Mallotane, too, has limited scalability as instantiating the task network and pruning unreachable tasks are still sequential. Third, we created the new progression search planner CrowdHTN. It uses randomized work stealing for load balancing and performs random DFS to find a plan. While it performed overall worse than SHiP and Mallotane it has the highest theoretical potential for scalability, as it is fully parallel. A more detailed overview of CrowdHTN will be given later in \ref{prelim: crowdhtn}.
-In our work on parallel TOHTN planners, we found that the typical characteristics of sequential planners extended to the parallel case. That is, CrowdHTN retained the hit-or-miss characteristic of search based planners where Mallotane proved to have more consistency in between runs. \\
+Out of these three, SHiP performed overall best. As a portfolio planner, it is however limited by the number sequential planners with sufficiently different planning characteristics. It's performance only scales meaningfully for up to four cores. Second, we have Mallotane. Here we took the sequential SAT-based planner Lilotane and integrated it with Mallob as a SAT backend. This allowed us to parallelize the SAT solving part of Lilotane's planning. Mallotane, too, has limited scalability as instantiating the task network and pruning unreachable tasks are still sequential. Third, we created the new progression search planner CrowdHTN. It uses randomized work stealing for load balancing and performs random DFS to find a plan. While it performed overall worse than SHiP and Mallotane it has the highest theoretical potential for scalability, as it is fully parallel. A more detailed overview of CrowdHTN will be given later in \ref{prelim: crowdhtn}. \\
+In our work on parallel TOHTN planners, we found that the typical characteristics of sequential planners extended to the parallel case. That is, CrowdHTN retained the hit-or-miss characteristic of search based planners where Mallotane proved to have more consistency in between runs. SHiP, which successfully emulates a virtual best solver of state of the art hierarchical planners may be considered state of the art in parallel hierarchical planning. \\
 We are not aware of any work on malleable TOHTN planning. However, with the presence of malleable SAT solvers such as Mallob \cite{sanders2022decentralized} and Paracooba \cite{heisinger2020distributed} one could argue that Mallotane and any other SAT-based hierarchical planner can be made malleable. This is however limited by the fact that SAT-solving is only part of the work those planners perform which would limit scalability.
