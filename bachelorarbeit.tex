@@ -289,42 +289,36 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 	- \cite{padia2018yarn} storyline visualizations
 	- \cite{mohr2018ml} automated machine learning
 
+- hierarchical planning is expensive \cite{erol1994htn}
+- HTN is semi-decidable, TOHTN is in D-EXPTIME, EXPSPACE-hard \cite{erol1996complexity}
+- there is a correspondence between TOHTN and context free languages
+- hierarchical problems can be recursive which makes the detection of duplicate states important
+
 Malleability is the ability of a parallel job to efficiently integrate new PEs into a parallel job at run time as well as handle a reduction of the available PEs \cite{feitelson1997job}. Malleable programs are well-liked by administrators of supercomputers, as they allow the utilization of all compute resources, maintaining both high throughput and keeping latencies for new jobs low \cite{feitelson1997job, hungershofer2004combined}. The malleable model does pose additional challenges for application programmers, though and malleable jobs are only easy to implement if we restrict our problems to those which split into small, independent work packages \cite{feitelson1997job, tucker1989process} and few malleable applications exist. 
 However, in recent years a number of malleable SAT solvers have emerged. Among those Mallob \cite{sanders2022decentralized} and Paracooba \cite{heisinger2020distributed}. This is of special importance as SAT serves as a building in many other applications such as hierarchical planning. Having malleable SAT solvers available may allow for other applications to profit from this paradigm while being presented a simple to use interface. \\
 
-- we present improvements on parallel TOHTN planner CrowdHTN such as restarts and distributed detection of duplicate states
-- we show that detection of duplicate states increases performance but is fundamentally limited and unable to help a planner achieve completeness
-- 
+In this thesis, we present three main advances in parallel and malleable TOHTN planning. \\
+Firstly, we present a number of improvements for the parallel search-based planner CrowdHTN.
+Both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} have shown the importance of detecting duplicate search nodes to improve the performance of hierarchical planners. PANDA specifically uses an approach based on hashing which may fall back to full node comparisons to avoid false positives. Parallel planner CrowdHTN already includes a loop detection mechanism based on the ideas of PANDA \cite{bretl2021parallel}. We take the idea of PANDA to only compare hashes and not full nodes and generalize it to bloom filters which may use any number $k$ of hash functions to reduce false positive rates. Bloom filters then allow us to present a design for a distributed loop detection mechanism.
 
-\subsection{Motivation}
+- introduce restarts
+	- have been used in SAT with great success \todo{CITATIONS!}
+	- show that they can make a planner complete even if false positives do occur
+- talk about search algorithms
+	- try to design a heuristic for distributed malleable planning\\
+Second, we provide a general overview of the completeness of different TOHTN planning approaches. We show that both search-based planners using BFS, A-star and current SAT-based planners are complete. In addition we argue that heuristic best-first search may always be incomplete and that, while current loop detection mechanisms are helpful for planner performance, there are cases of recursion in hierarchical planning problems which they are unable to detect. Lastly, we show that our restart mechanism brings random DFS into the list of algorithms which are complete on all problems. \\
+Third, we present our design of a malleable TOHTN planner. In this we integrate our planner CrowdHTN with the malleable job scheduler Mallob. We offer an overview of our design and show how work stealing in general can be adapted to a malleable framework while preserving completeness of the search. Doing so we also show Mallob's capabilities as a general purpose job scheduler and load balancer.\\
+In our evaluation we find that using Mallob as a job scheduler has negligible overhead and we manage to improve both the overall performance of CrowdHTN. Bloom filters specifically show that 
 
-\subsection{Research Goal}
-- Provide a performant parallel TOHTN planner by improving upon the Crowd planner
-- improve the performance of CrowdHTN
-- provide an efficient malleable TOHTN planner
-	- first it needs to be correct and complete
-- Provide integration of TOHTN into the Mallob malleable load balancer
-- Compare performance of parallel to malleable TOHTN planning
-
-\subsection{Thesis Overview}
-- explain TOHTN planning and malleability in more detail
-	- introduce both parallel TOHTN planner CrowdHTN which we improve in this work
-	- and the malleable load balancer and SAT solver Mallob
-
-- 
-
-\paragraph{Terminology}
-- PE: parallel unit in general
-- worker: Mallob worker specifically
-- job: job within Mallob
-- Mallob assigns a number of PEs to a job running a worker on each one
-
+- findings:
+	- Mallob has negligible overhead
+	- we improve overall performance of CrowdHTN
+	- bloom filters present a clear improvement over hash sets, even without distributed use
+	
+	- malleability is a challenge?
+\clearpage
+\pagebreak
 \section{Preliminaries}
-- soundness: all solutions we find are correct
-- completeness: we always find a plan if it exists
-- correctness: kinda obvious
-- systematicity (\cite{holler2020htn}): for search we explore each search node at most once (Kambhampati, Knoblock, \& Yang, 1995) -> not a problem for TOHTN? check p.18 in holler2020 again
-- optimality: shortest plan (few planners, Lilotane maybe?)
 
 \input{prelim_tohtn_formalism}
 \input{prelim_tohtn_techniques}
@@ -359,7 +353,7 @@ In this section we will discuss improvements to the algorithms underlying CrowdH
 \input{eval}
 
 \pagebreak
-\section{Future Work}
+\section{Conclusion}
 
 - work stealing is extremely helpful with malleability on the integrating new PEs side of things
 - well-coordinated restarts solve a number of problems (completeness for random DFS, dealing with disappearing workers, probabilistic loop detection)

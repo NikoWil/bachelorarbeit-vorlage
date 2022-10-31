@@ -134,8 +134,6 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 \subsection{Local Loop Detection}
 \label{eval: loop detection}
 - general loop detection:
-- loop hit rate
-- global loop hit rate
 - performance of hash set vs bloom filter
 
 - add runs without any loop detection to the evaluation
@@ -181,6 +179,9 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 \label{eval: restarts}
 - test the probabilistic restarts
 - with 900 seconds we expect $\sum_{t=1}^{899} \frac{1}{t} \approx 7.38$ restarts per run
+- expect coverage to go up, IPC score to go slightly down
+- we are expecting many restarts especially at the beginning, this will lower scores on easy instances
+- however, we also expect the restarts to somewhat negate the hit-or-miss nature of our planner, leading to increased coverage
 
 \begin{figure}
 	\caption{Evaluating CrowdHTN with a local bloom filter with and without restarts}
@@ -203,6 +204,8 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 
 \subsection{Scalability of CrowdHTN}
 \label{eval: scalability}
+In general, the scaling behavior of CrowdHTN is hard to visualize due to it's nature as a search based planner using DFS. As a result, instances tend to either be solved extremely fast even on few PEs or not solved at all even as we increase the available resources. To demonstrate scaling, we want instances that are reliably solved on any number of PEs but which are not trivial. Looking at our previous benchmarks 
+
 - demonstrating the scaling behavior of CrowdHTN is hard due to the hit-or-miss of random DFS in TOHTN
 - we need an instance that is reliably solved
 - we need an instance that takes long enough to solve to demonstrate an effect
@@ -260,7 +263,7 @@ To test the behavior of CrowdHTN under malleable conditions, we want to again fo
 - we expect 4 restarts by 30 seconds
 - we expect only one more by the time 90 seconds have passed
 - there seems to be some loss as the number of PEs is reduced and increases again
-- 
+- we send the root off to a random other PE, may loose information if the reduction in PEs is large and we send it to a PE which was also just taken away
 
 \begin{table}
 	\caption{Coverage and average run time of malleable and moldable CrowdHTN}
