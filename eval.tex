@@ -119,7 +119,8 @@ Regarding loop detection, the results are similarly varied as with state sharing
 \subsection{Search Algorithms}
 \label{eval: algorithms}
 In section \ref{improv: search algorithms} we presented four search algorithms that we implemented for CrowdHTN. Those algorithms are random DFS, heuristic DFS, A-star like and BFS. We have tested all four algorithms on our test instance set using 4 PEs and a local bloom filter without restarts for loop detection. The results of this test are visualized in figure \ref{figure: eval algorithm}, a summary of coverage and IPC score is presented in table \ref{table: eval algorithm}. \\
-Overall, random DFS performed best, followed by heuristic DFS, A-star like search and finally BFS with our best algorithm, random DFS, solving almost twice as many instances and having twice the IPC score of our worst algorithm, BFS. Additionally, we observe a hit-or-miss behavior in both our DFS implementations where plans are either found almost immediately or not at all. Out of the 50 instances solved by random DFS, only 18 were solved in more than 1 and out of these 18 only 9 were solved in more than 10 seconds. BFS on the other hand solves 14 out of 30 instances in more than a second and 11 of these 14 in over 10 seconds. As such, while overall worse performing it does seem to scale better with runtime. \\
+Overall, random DFS performed best, followed by heuristic DFS, A-star like search and finally BFS with our best algorithm, random DFS, solving almost twice as many instances and having twice the IPC score of our worst algorithm, BFS. Additionally, we observe a hit-or-miss behavior in both our DFS implementations where plans are either found almost immediately or not at all. Out of the 50 instances solved by random DFS, only 18 were solved in more than 1 and out of these 18 only 9 were solved in more than 10 seconds. BFS on the other hand solves 14 out of 30 instances in more than a second and 11 of these 14 in over 10 seconds. As such, while overall worse performing it does seem to scale better with runtime. Overall, BFS seems unsuited for TOHTN planning due to the extremely high branching factor of the problems involved.
+\\
 Comparing our two DFS-based approaches, we see that random DFS performs better than heuristic DFS guided by our heuristic from section \ref{improv: crowd heuristic}. We attribute this to the fact that we consciously limited our heuristic to information on the hierarchy available from the lifted instance to reduce the time spent on precomputation. Others, such as \cite{holler2020htn} argue that heuristics must utilize both hierarchy and world state information. Our findings corroborate this theory.
 
 \begin{figure}[!hbp]
@@ -144,7 +145,7 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 	\end{tabular}
 \end{table}
 
-\subsection{Local Loop Detection}
+\subsection{Bloom Filters in Loop Detection}
 \label{eval: loop detection}
 The next feature we tested was the new loop detection based on bloom filters. For our tests we set $k=4$ and limited our false positive probability to $0.001$. The results of this test are shown in figure \ref{figure: eval loop detection}. We see that our bloom filter outperforms the hash set on 32 and 64 PEs, increasing the IPC score by $\sim 5.5$ and coverage by about 6\% when switching from hash set to bloom filter. The gains are so large that 32 PEs using a bloom filter outperform 64 PEs using a hash set. \\
 The gains are strongest on the domain Monroe-Fully-Observable and also visible on Snake.
@@ -157,8 +158,6 @@ Looking at the data in table \ref{table: tohtn metadata} we see that Logistics-L
 	
 		\centering
 		\includegraphics[width=0.5\textwidth]{images/final/loop_detection}
-	
-	% python3 ../MA_scripts/diagrams.py -files=results_64_dfs_local_bloom_handlepanic_1.csv,results_32_dfs_local_bloom_handlepanic.csv,results_64_dfs_local_hashset_handlepanic.csv,results_32_dfs_local_hashset_handlepanic.csv -names=64-bloom,32-bloom,64-hashset,32-hashset
 \end{figure}
 
 \subsection{Probabilistic Restarts and Global Loop Detection}
@@ -166,14 +165,12 @@ Looking at the data in table \ref{table: tohtn metadata} we see that Logistics-L
 In our next test, we enabled the probabilistic restarts we introduced to guarantee completeness for our bloom filter based loop detection. With runs lasting 900 seconds, we expect $\sum_{t=1}^{899} \frac{1}{t} \approx 7.38$ restarts per run with 5 of these restarts happening within the first 90 seconds. \\
 First, we compare CrowdHTN using local bloom filters with and without restarts. The result is shown in figure \ref{figure: restarts}. Overall, probabilistic restarts seem to have a positive effect on coverage and IPC score which is more pronounced on a lower number of PEs. In this way they somewhat mitigate the hit-or-miss nature of our planner. \\
 While we see a big difference on 32 PEs, there is little difference on 64 PEs where restarts come with a slight benefit to coverage and a little loss in IPC score. We suspect that, while restarts may increase our chances of finding a plan, they do decrease the chance of finding a plan fast, as they interrupt our search and are especially common right at the beginning. Additionally, there is little difference between restarts on 32 and 64 PEs. We will go further into the specific scaling behavior of CrowdHTN in the benchmark on scalability in \ref{eval: scalability}. \\
-
 \begin{figure}[!hbp]
 	\caption{Evaluating CrowdHTN with a local bloom filter with and without restarts}
 	\label{figure: restarts}
 	\centering
 	\includegraphics[width=0.5\textwidth]{images/final/restarts}
 \end{figure}
-\todo{}
 
 \subsection{Global Loop Detection}
 \label{eval: global loop}
@@ -294,12 +291,12 @@ We see the following main results
 Regarding our upgrades to CrowdHTN, we see that the improved node exploration algorithm leads to a big reduction in overall search nodes encountered. Furthermore, bloom filters and distributed loop detection along with restarts both manage to improve the performance of CrowdHTN, with the bigger gain in IPC score coming from the introduction of bloom filters and distributed loop detection with restarts having a bigger impact on overall coverage. \\
 In addition to this, we see that overall scaling in CrowdHTN is hard to demonstrate due to the hit-or-miss nature of the planner. However, on well-suited domains such as Monroe-Fully-Observable we demonstrate good scaling behavior of CrowdHTN. \\
 Regarding malleability, we see that performance is partially preserved but that loss of information due to frequent reshuffling of a large fraction of PEs can present a problem that the current restarting technique is unequipped to handle.
+\clearpage
 
 \begin{table}
 	\caption{Domain-wise comparison of sequential planners PANDA, HyperTensioN and parallel planner Crowd in its standalone version}
 	\label{table: results old}
 	\centering
-	\begin{adjustbox}{angle=90}
 
 \begin{tabular}{|l|cc|cc|cc|cc|}
 	\hline
@@ -335,7 +332,6 @@ Regarding malleability, we see that performance is partially preserved but that 
 	\hline
 \end{tabular}
 
-	\end{adjustbox}
 \end{table}
 
 \begin{table}

@@ -1,5 +1,3 @@
-In this section we will discuss improvements to the algorithms underlying CrowdHTN. We start by introducing different search algorithms in \ref{improv: search algorithms} and offer a discussion regarding their completeness. In \ref{improv: loop detection} we give an overview of loop detection mechanisms in other hierarchical planners, discuss loop detection as it was already present in CrowdHTN and present our design of a distributed loop detection mechanism based on bloom filters.
-
 \subsection{Loop Detection}
 \label{improv: loop detection}
 In recent years it has become clear that the recursive nature of HTN instances poses its own set of challenges to planners. As a result, mechanisms to perform loop detection have become an active area of research with both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} exploring it.
@@ -81,7 +79,7 @@ The hash function we do use is a combination of the hashes for the task network 
 	- however, it is a useful benchmark as to how many loops we *should* expect
 \end{comment}
 
-\subsubsection{Approximate Loop Detection}
+\subsubsection{Approximate and Distributed Loop Detection}
 \label{ld - approximate loop detection}
 In the preceding sections we have always made the assumption that our loop detection mechanism needs to be perfect, i.e., it needs to avoid both false positives and false negatives. Some hierarchical planners do not share this assumption and both HyperTensioN and PANDA have configurations that allow for false positives. In the following paragraphs, we will also permit false positives to occur and explore the implications. \\
 We start out by introducing the concept of AMQ data structures with a specific focus on bloom filters and how to use the scalable bloom filter in loop detection. Once this is done, we turn to the problem of false positives and introduce a restart mechanism that guarantees that, given enough time, we are able to reach any search node. The section is concluded by us using the special properties of bloom filters to design a distributed loop detection mechanism which allows for efficient information sharing between PEs.
