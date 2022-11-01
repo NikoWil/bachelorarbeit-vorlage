@@ -266,9 +266,10 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Introduction}
-- why is TOHTN great
-- let's improve on parallel TOHTN
-
+Planning via Hierarchical Task Networks (HTN) is a popular approach to automated AI planning. HTN planning works by repeatedly decomposing a set of initial tasks until they have been decomposed to the level of simple actions \cite{georgievski2015htn, bercher2019survey}. These actions form a plan which can be executed to achieve the goal set out by the initial tasks. Totally Ordered (TO) HTN planning is an important sub-problem of HTN planning where all tasks are constrained by a total order. \\
+Hierarchical planners are easy to use as the hierarchy allows the user to insert a structure into the problem description and to provide the planner with advice to guide the planning procedure. As a result, HTN planning has been used in a number of fields. \cite{munoz2004role} have used HTN planning for AI in real-time strategy games. Similarly, \cite{ontanon2015adversarial} have improved their minimax game tree search in real-time strategy games via HTN, which allowed them to reduce the branching factor of their problem. This approach was further extended by \cite{lin2020htn} to also take the opponent's strategy into account. Further applications of HTN planning include automated web service composition \cite{sirin2004htn} as well as the composition of cloud applications \cite{georgievski2017cloud}, socially assistive robotics \cite{gonzalez2017three}, storyline visualizations \cite{padia2018yarn} and automated machine learning \cite{mohr2018ml}. \\
+While popular with users, HTN planning does present challenges for implementers as instances can be very CPU and memory intensive to solve. It was shown that HTN planning itself is only semi-decidable and that TOHTN planning is still in D-EXPTIME while being EXPSPACE-hard \cite{erol1994htn, erol1996complexity}. Regarding the expressive power of TOHTN problems they correspond to the class of context-free languages \cite{holler2014language}. Part of the complexity in HTN planning stems from its recursive nature. As a result of this, the detection of duplicate states plays an important role in the performance of planners \cite{holler2021loop}. \\
+\begin{comment}
 - hierarchical planning is popular
 - domain-independent automated planning
 - decompose a set of initial tasks until they have been decomposed to the level of simple actions
@@ -278,48 +279,41 @@ Thanks to i10pc135 which suffered much to make the experimental evaluation possi
 - hierarchical planners are easy to use
 - hierarchy allows the user to insert structure into the problem and advise the planner
 - hierarchical planning is used in a number of domains
-	- \cite{munoz2004role} real-time strategy games\\
-	- \cite{ontanon2015adversarial} improve minimax game tree search in RTS, reduce branching factor
-	- \cite{lin2020htn} also takes the opponent's strategy into account
-	
-	- \cite{sirin2004htn} web service composition
-	- \cite{georgievski2017cloud} cloud application composition
-	
-	- \cite{gonzalez2017three} socially assistive robotics
-	- \cite{padia2018yarn} storyline visualizations
-	- \cite{mohr2018ml} automated machine learning
+- \cite{munoz2004role} real-time strategy games\\
+- \cite{ontanon2015adversarial} improve minimax game tree search in RTS, reduce branching factor
+- \cite{lin2020htn} also takes the opponent's strategy into account
+
+- \cite{sirin2004htn} web service composition
+- \cite{georgievski2017cloud} cloud application composition
+
+- \cite{gonzalez2017three} socially assistive robotics
+- \cite{padia2018yarn} storyline visualizations
+- \cite{mohr2018ml} automated machine learning
 
 - hierarchical planning is expensive \cite{erol1994htn}
 - HTN is semi-decidable, TOHTN is in D-EXPTIME, EXPSPACE-hard \cite{erol1996complexity}
-- there is a correspondence between TOHTN and context free languages
+- there is a correspondence between TOHTN and context free languages \cite{holler2014language}
 - hierarchical problems can be recursive which makes the detection of duplicate states important
+\end{comment}
 
 Malleability is the ability of a parallel job to efficiently integrate new PEs into a parallel job at run time as well as handle a reduction of the available PEs \cite{feitelson1997job}. Malleable programs are well-liked by administrators of supercomputers, as they allow the utilization of all compute resources, maintaining both high throughput and keeping latencies for new jobs low \cite{feitelson1997job, hungershofer2004combined}. The malleable model does pose additional challenges for application programmers, though and malleable jobs are only easy to implement if we restrict our problems to those which split into small, independent work packages \cite{feitelson1997job, tucker1989process} and few malleable applications exist. 
-However, in recent years a number of malleable SAT solvers have emerged. Among those Mallob \cite{sanders2022decentralized} and Paracooba \cite{heisinger2020distributed}. This is of special importance as SAT serves as a building in many other applications such as hierarchical planning. Having malleable SAT solvers available may allow for other applications to profit from this paradigm while being presented a simple to use interface. \\
+However, in recent years a number of malleable SAT solvers have emerged. Among those Mallob \cite{sanders2022decentralized} and Paracooba \cite{heisinger2020distributed}. This is of special importance as SAT solvers serve as a building block in many other applications such as hierarchical planning. Having malleable SAT solvers available may allow for other applications to profit from this paradigm while being presented a simple to use interface. \\
 
 In this thesis, we present three main advances in parallel and malleable TOHTN planning. \\
 Firstly, we present a number of improvements for the parallel search-based planner CrowdHTN.
 Both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} have shown the importance of detecting duplicate search nodes to improve the performance of hierarchical planners. PANDA specifically uses an approach based on hashing which may fall back to full node comparisons to avoid false positives. Parallel planner CrowdHTN already includes a loop detection mechanism based on the ideas of PANDA \cite{bretl2021parallel}. We take the idea of PANDA to only compare hashes and not full nodes and generalize it to bloom filters which may use any number $k$ of hash functions to reduce false positive rates. Bloom filters then allow us to present a design for a distributed loop detection mechanism. Additionally, PANDA has shown that heuristics can greatly increase the performance of search-based planner \cite{holler2020htn}. We try to adapt heuristic search for CrowdHTN while under the added constraints of malleability. Doing so, we implement BFS, heuristic DFS and A-star in CrowdHTN.
 Last, we take inspiration from SAT where restarts have been used since the 90's \cite{crawford1994experimental} to design a restarting scheme for CrowdHTN which allows it to be complete even as bloom filter based detection of duplicate nodes may lead to false positives. \\
-
 Second, we provide a general overview of the completeness of different TOHTN planning approaches. We show that both search-based planners using BFS, A-star and current SAT-based planners are complete. In addition we argue that heuristic best-first search may always be incomplete and that, while current loop detection mechanisms are helpful for planner performance, there are cases of recursion in hierarchical planning problems which they are unable to detect. Lastly, we show that our restart mechanism brings random DFS into the list of algorithms which are complete on all problems. \\
 Third, we present our design of a malleable TOHTN planner. In this we integrate our planner CrowdHTN with the malleable job scheduler Mallob. We offer an overview of our design and show how work stealing in general can be adapted to a malleable framework while preserving completeness of the search. Doing so we also show Mallob's capabilities as a general purpose job scheduler and load balancer.\\
-In our evaluation we find that bloom filters offer higher performance than hash set based duplicate detection.
+In our evaluation we find that our implementation suffers from some overhead due to the integration into the Mallob scheduler.
+However, we also see that bloom filters in general outperform hash sets when it comes to detecting duplicate states in TOHTN planning and that this performance gain extends to our distributed loop detection scheme. We further find that restarts not only serve to ensure the completeness of our planner while using bloom filters but have an additional positive impact on overall performance. Regarding malleability, we see that our proposed malleable work stealing scheme can suffer from some loss of performance when a large number of PEs is frequently reshuffled but that this can be mitigated with frequent restarts. \\
 
-
-- findings:
-	- Mallob has negligible overhead
-	- we improve overall performance of CrowdHTN
-	- bloom filters present a clear improvement over hash sets, even without distributed use
-	
-	- malleability is a challenge?
-
-- do we get scaling through restarts for few nodes?
+The rest of this work follows the following structure: in section \ref{prelim} we introduce a TOHTN planning formalism as well as planning techniques, followed by an intro to malleability and an overview of parallel and distributed computing techniques that inform the design of CrowdHTN. It ends with a short introduction to CrowdHTN and Mallob. Section \ref{improv} presents us two potential theoretical improvements to CrowdHTN and the design of a distributed loop detection scheme. In section \ref{improv: completeness} we show how current loop detection schemes are unequipped to ensure completeness of hierarchical planners and argue for the use of restarts as an alternative technique. Section \ref{malleable: overview} presents our design of a malleable parallel TOHTN planner based on work stealing. This is followed by section \ref{impl} which contains implementation details of both our improvements and the malleable design. Finally, section \ref{eval} evaluates and compares our planner to it's old standalone version, presents the performance impact of our various improvements and provides an overview of the behavior of CrowdHTN as the number of PEs scales as well as under malleable conditions. Section \ref{conclusion} concludes this work.
 	
 \clearpage
 \pagebreak
 \section{Preliminaries}
-
+\label{prelim}
 \input{prelim_tohtn_formalism}
 \input{prelim_tohtn_techniques}
 \input{prelim_malleability}
@@ -330,6 +324,8 @@ In our evaluation we find that bloom filters offer higher performance than hash 
 \clearpage
 \pagebreak
 \section{Theoretical Improvements of the CrowdHTN Planner}
+\label{improv}
+\todo{}
 \input{improv_search_algorithms}
 \input{improv_loop_detection}
 
@@ -345,16 +341,23 @@ In our evaluation we find that bloom filters offer higher performance than hash 
 
 \pagebreak
 \section{Implementation}
+\label{impl}
+In this section we will give an overview of the implementation work we performed. We start out with an overview of the integration of CrowdHTN into Mallob in \ref{impl: mallob integration} where we present the Mallob interface, explain how we implemented it while adhering to Mallob's performance guarantees, mention how we improved the reliability of CrowdHTN in low memory conditions and end with a detailed overview of how we handle messages addressed to PEs that no longer belong to the same job. This is followed by our mechanism for efficiently handling restarts in \ref{impl: version increase} and an explanation of how we perform an all-reduction in a malleable environment to allow for global loop detection in \ref{impl: global loop}. We conclude with CrowdHTN's improved algorithm for the expansion of search nodes in \ref{impl: reduce nodes} and our presentation of an efficient way to hash search nodes in \ref{impl: efficient hashing}.
 \input{impl_mallob_integration}
 \input{impl_crowd_improvements}
 \clearpage
 \pagebreak
 \section{Experimental Evaluation}
+\label{eval}
+In this section we will perform an evaluation of our new CrowdHTN implementation as it is integrated into Mallob, the new features we added into CrowdHTN and how it behaves in a malleable environment. \\
+We start out by presenting our experimental setup in \ref{eval: setup}, including the naming scheme we use to identify different versions and configurations of CrowdHTN. After, we first offer an overview of the performance of CrowdHTN as a standalone program and improved CrowdHTN integrated into Mallob.
+This is followed by more detailed discussions of the different improvements and features we added. We will review the effect of the improvements on the implementation level and discuss the behavior of different search algorithms in CrowdHTN. Then we see how the performance changes as we enable bloom filters for loop detection, probabilistic restarts and distributed loop detection one after the other. We conclude with a discussion on the scaling behavior and the performance of CrowdHTN in a malleable environment, followed by an overall recap. \\
+The overall results can also be seen in tables \ref{table: results old} for the sequential planners and standalone CrowdHTN and \ref{table: results new} for CrowdHTN integrated into Mallob.
 \input{eval}
 
 \pagebreak
 \section{Conclusion}
-
+\label{conclusion}
 - work stealing is extremely helpful with malleability on the integrating new PEs side of things
 - well-coordinated restarts solve a number of problems (completeness for random DFS, dealing with disappearing workers, probabilistic loop detection)
 

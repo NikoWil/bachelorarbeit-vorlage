@@ -1,16 +1,20 @@
+\begin{comment}
 \subsection{A Common (TO)HTN Interface}
 - be able to mix grounders, pruners, planners - maybe even loop detection!
 - be able to combine different pruners - use a lifted pruner early and then plug in a grounder and grounded pruner afterwards
 - PANDA seems to try to provide this
-	- quite successful regarding the input format for HTN planning which finally makes planners easily comparable, advancing the state of the art
-	- sadly not as successful for the rest of planning
+- quite successful regarding the input format for HTN planning which finally makes planners easily comparable, advancing the state of the art
+- sadly not as successful for the rest of planning
 - we believe their to be great potential in 
+\end{comment}
 
+\begin{comment}
 \subsection{Combine Pruning Approaches}
 - HyperTensioN and Panda base their pruning on different paradigms
 - HyperTensioN's pruning could be extended to work on grounded instances where it would have even more information available
 - both these approaches are structurally different and could thus be used to compliment each other
 - whether the better pruning would offset the increased runtime cost remains to be seen
+\end{comment}
 
 \subsection{Advanced Dynamic Pruning}
 In section \ref{improv: completeness} we show that the current state of the art in loop detection can detect some but not all cases of recursion as it is present in hierarchical planning problems. We further show that this not only negatively affects the performance of our planners but may make planners based on heuristic DFS incomplete. \\
@@ -31,6 +35,7 @@ More research would need to be put into detecting such cases to perform more int
 - new loop detection techniques leading to planner completeness
 \end{comment}
 
+\begin{comment}
 \subsection{Lifted Parallel Search}
 - the Crowd way of performing relatively simple search does not work out in the end
 - we can still see some scaling for the parallel case
@@ -39,6 +44,7 @@ More research would need to be put into detecting such cases to perform more int
 - same as HyperTensioN
 - a lilotane-like behavior may be the best from a practical perspective, as it is more consistent
 - a search-based formulation may be easier to both parallelize and adapt to a malleable context - any search may be plugged in where CrowdHTN currently resides
+\end{comment}
 
 \subsection{Improvements Unlocked by a Shared Memory Implementation}
 - we have decided to stay with CrowdHTN's way of performing grounding on-demand and just in time, as it lends itself particularly well to a malleable environment
@@ -56,10 +62,13 @@ More research would need to be put into detecting such cases to perform more int
 	- would necessitate us to keep old search nodes around and re-engineer our planner
 
 \subsection{Intelligent Restarts}
-In both \ref{ld - completeness} and \ref{improv: completeness} we argue for the use of probabilistic restarts to guarantee the completeness of CrowdHTN. We perform restarts with probability $\frac{1}{t}$ at second $t$. This is only one of the possible ways to use restarts in hierarchical planning. \\
+In both \ref{ld - completeness} and \ref{improv: completeness} we argue for the use of probabilistic restarts to guarantee the completeness of CrowdHTN. We perform restarts with probability $\frac{1}{t}$ at second $t$. This is only one of the possible ways to use restarts. \\
 At the same time, restarts and restarting strategies to increase solver performance have played a role in SAT solving since the 1990s.
-\cite{langley1992systematic} suggested the use of iterative sampling in AI planning systems, repeatedly exploring random paths up to a depth limit and restarting if no solution was found. Their work was adapted by \cite{crawford1994experimental} who employed the iterative sampling strategy for SAT solving.
+\cite{langley1992systematic} suggested the use of iterative sampling in AI planning systems, repeatedly exploring random paths up to a depth limit and restarting if no solution was found. 
+Their work was adapted by \cite{crawford1994experimental} who employed the iterative sampling strategy for SAT solving. As a general restart strategy for increased performance, the Luby sequence was developed \cite{luby1993optimal} and has by now been adapted by SAT solvers \cite{huang2007effect}. By now a wide array of different restart strategies have been tried in SAT solvers. There are both static restart strategies, such as uniform intervals and based Luby schemes and dynamic strategies which incorporate run time information into their decision \cite{biere2015evaluating}. \\
+We are eager to see how incorporating such restart schemes may affect the performance of hierarchical planners.
 
+\begin{comment}
 In SAT solving, restarts have long been an important part of solvers to increase their performance.
 
 - we perform restarts according to the harmonic series
@@ -69,12 +78,13 @@ In SAT solving, restarts have long been an important part of solvers to increase
 - \cite{crawford1994experimental} uses restarts via iterative sampling for SAT solving
 - \cite{gomes1998boosting} use restarts in planning, argue their use in combinatorial search
 - \cite{biere2015evaluating}
-	- optimal restart points may be unknown
-	- frequent restarts may help in learning
-	- long times may be needed to find solutions
-	- show that luby is quite good
-	- different restart policies:
-		- static: uniform, geometric, luby
-		- dynamic: agility - prohibit restart depending on status, 
+- optimal restart points may be unknown
+- frequent restarts may help in learning
+- long times may be needed to find solutions
+- show that luby is quite good
+- different restart policies:
+- static: uniform, geometric, luby
+- dynamic: agility - prohibit restart depending on status, 
 - \cite{luby1993optimal} propose the luby sequence as a strategy
 - \cite{huang2007effect} use luby sequence in SAT
+\end{comment}

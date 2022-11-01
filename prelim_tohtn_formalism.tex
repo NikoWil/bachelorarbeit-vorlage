@@ -58,7 +58,8 @@ Each method $m$ has exactly one associated compound task $t_c$. However, multipl
 	If $subtasks(m)$ has a total order for all $m \in M$ and the tasks in $\tau_0$ are totally ordered, we speak of a \textbf{TOHTN domain} and \textbf{TOHTN problem}.
 \end{definition}
 It is possible to translate any HTN problem with initial task network $\tau_0$ into an equivalent HTN problem with initial task network $\tau'_0$ s.t. $\tau'_0$ consists of only a single task. \\
-It is possible to simplify the model s.t. $\tau_0$ always consists of only a single task with no constraints. We do this by inserting a new initial task $t_0$ and method $m_0$ with no arguments s.t. resolving $t_0$ via $m_0$ results in $\tau_0$.
+It is possible to simplify the model s.t. $\tau_0$ always consists of only a single task with no constraints. We do this by inserting a new initial task $t_0$ and method $m_0$ with no arguments s.t. resolving $t_0$ via $m_0$ results in $\tau_0$. \\
+Another way of viewing HTN problems is as AND/OR trees \cite{holler2021landmark} where tasks form OR-nodes where one of may methods is chosen and methods form AND-nodes, as all subtasks need to be resolved.
 
 \subsubsection{Complexity of (TO)HTN planning}
 \label{prelim: tohtn complexity}
