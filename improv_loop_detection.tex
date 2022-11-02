@@ -2,7 +2,7 @@
 \label{improv: loop detection}
 In recent years it has become clear that the recursive nature of HTN instances poses its own set of challenges to planners. As a result, mechanisms to perform loop detection have become an active area of research with both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} exploring it.
 In this section we will discuss loop detection specifically in the context of parallel and distributed hierarchical planning.
-We want to address this, as previous research indicates that the performance of randomized work stealing may suffer on problems where the detection of duplicate states is important \cite{fukunaga2018parallel} and \cite{holler2021loop} have shown that duplicate search nodes play an important role in hierarchical planning. \\ 
+We want to address this, as research indicates that the performance of randomized work stealing may suffer on problems where the detection of duplicate states is important. \cite{fukunaga2018parallel} and \cite{holler2021loop} have shown that duplicate search nodes play an important role in hierarchical planning. \\ 
 We start out with a discussion of loop detection techniques in other planners such as PANDA and HyperTensioN in section \ref{ld - history others}. This is followed by a short overview of how CrowdHTN specifically differs and how this changes our base assumptions in section \ref{ld - tohtn simplifications}. Afterwards we first explore loop detection based on hash sets in section \ref{ld - perfect loop detection}. We conclude by exploring how approximate-membership-query (AMQ) data structures can be used in loop detection, how this affects completeness of the progression search algorithm and present our design for a distributed and global loop detection mechanism in section \ref{ld - approximate loop detection}.
 
 \begin{comment}
@@ -68,7 +68,7 @@ Both PANDA and HyperTensioN are sequential planners whereas CrowdHTN is highly p
 One simple way to perform loop detection which is also used in PANDA (\cite{holler2021loop}) is to use a hash set of visited states. The implementation in Crowd is slightly different from PANDA in that we use one combined hash for both world state and open tasks. Other than PANDA, CrowdHTN does incorporate the order of tasks into the hash, which should reduce collisions and makes the two levels of hashing less needed. \\
 Using hashes combined with a full comparison provides us a perfect loop detection, i.e., neither false positives nor false negatives exist. This makes it a useful technique to benchmark other loop detection methods. However, both in the sequential and in the distributed case this technique suffers from performance problems. \\
 In case of hash collisions, we have to fall back to a full comparison of world state $s$ and open tasks $tn$. While $s$ is bound in size by the total number of predicates, the size of $tn$ is effectively unbound, making this an expensive operation. Additionally, we have to keep both $s$ and $tn$ around for all nodes ever encountered, increasing the memory footprint of our planner. \\
-The hash function we do use is a combination of the hashes for the task network and the world state. The sequence of open tasks can be hashed as-is in a deterministic fashion by iterating over it from beginning to end. For the world state as a set of predicates we do not have a fixed order. We solve this by combining hash values of predicates by adding their squares, a commutative operation. Other options would have included first sorting the elements to impose a fixed order but would have negatively impacted hashing performance.
+The hash function we do use is a combination of the hashes for the task network and the world state. The sequence of open tasks can be hashed as-is in a deterministic fashion by iterating over it from beginning to end. For the world state as a set of predicates we do not have a fixed order. We solve this by combining hash values of predicates by adding their squares, a commutative operation.
 \begin{comment}
 	- Additionally, there is the full comparison for the world state
 	- in practise this can be a problem, at the same time asymptotically it should not matter as it will be dwarfed by the 
@@ -143,25 +143,25 @@ Given bloom filters and their variations we have decided on the use of a scalabl
 
 \paragraph{Completeness in the face of false positives}
 \label{ld - completeness}
-While using approximate membership queries as described in the previous paragraph gives us a number of advantages, it also introduces a new set of challenges. Among these is are false positives. As a result, we can expect to loose parts of our search space. More specifically, if we perform progression search using bloom filters and $n = n_1, \ldots, n_l$ is a path of length $l$ from our initial search node to a goal search node, then for any $n_i$ in $n$, the search nodes $n_1, \ldots, n_{i-1}$ may collectively set the $k$ hashes associated with $n_i$, filtering it out. This may end up turning a TOHTN problem unsolvable for us even though a plan exists. As a result, our planner, if otherwise unchanged, will no longer be complete. \\
-We will now take a closer look at the probabilities involved. Assuming we use a scalable bloom filter with maximum false positive rate $p < 1$ and a hash function which maps search nodes to uniformly independent values and $n$ is a shortest path. Then
+While using approximate membership queries as described in the previous paragraph gives us a number of advantages, it also introduces a new set of challenges. Among these is are false positives. As a result, we can expect to loose parts of our search space. More specifically, if we perform progression search using bloom filters and $n = n_1, \ldots, n_l$ is a path of length $l$ from our initial search node to a goal search node, then for any $n_i$ in $n$, the search nodes $n_1, \ldots, n_{i-1}$ may collectively set the $k$ hashes associated with $n_i$, filtering it out. This may end up turning a TOHTN problem unsolvable for us even though a plan exists. As a result our planner, if otherwise unchanged, will no longer be complete. \\
+We will now take a closer look at the probabilities involved. Assuming we use a scalable bloom filter with maximum false positive rate $0 \leq p < 1$ and hash functions which map search nodes to uniformly independent values and $n$ is a shortest path. Then
 \[
 q = 1 - (1 - p)^l < 1
 \]
 is an upper bound on the probability that we are unable to solve the problem even though a solution exists. \\
-If hashes between runs are independent of each other we get
+It follows that
 \[
-\lim_{t \rightarrow \infty} q^t \rightarrow 0
+\lim_{u \rightarrow \infty} q^u \rightarrow 0
 \]
-That is, if keep re-running our search with new, independent hash functions we regain completeness. It is critical to use independent hash functions between runs to ensure that false positives in different runs are not correlated with each other. In the next step we need to determine when to re-run our planner. There are three main constraints.
+That is, if we keep re-running our search with new, independent hash functions we regain completeness. It is critical to use independent hash functions between runs to ensure that false positives in different runs are not correlated with each other. In the next step we need to determine when to re-run our planner. There are three main constraints.
 \begin{enumerate}
 	\item As the TOHTN instance may be recursive, the search space may be infinite
 	\item The number of restarts needs to be unbounded as run time goes to infinity
 	\item As a plan may be arbitrarily long, the number of runs with run time at least $u$ needs to be infinite
 \end{enumerate}
 Constraint one implies that we cannot simply wait until we explore the whole search space before restarting. Instead we will base our restarts on total run time so far. To fulfill constraints two and three, we perform a check every second where after $t$ seconds we perform a restart with probability $\frac{1}{t}$. \\
-For the expected number of restarts as we get $\sum_{t = 1}^\infty \frac{1}{t}$. This is the harmonic series and diverges, giving us the required unbounded number of restarts. As $t$ grows, the probability of restarting decreases, allowing for increasingly long runs, fulfilling the third constraint. \\
-This mechanism allows us to restore completeness to our planner while utilizing AMQs. Restarts may prove to have additional benefits to planner performance, as DFS-based planners tend to be hit-or-miss where restarts increase the number of opportunities for a hit. We do note that approximate loop detection does come at the cost of no longer being able to detect UNPLAN, as we can never guarantee that we explored the full search space. In practice, we do not expect this to matter as the search space of (TO)HTN problems tends to be too big to feasibly fully explore.
+For the expected number of restarts we get $\sum_{t = 1}^\infty \frac{1}{t}$. This is the harmonic series and diverges, giving us the required unbounded number of restarts. As $t$ grows, the probability of restarting decreases, allowing for increasingly long runs, fulfilling the third constraint. \\
+This mechanism allows us to restore completeness to our planner while utilizing AMQs. Restarts may prove to have additional benefits to planner performance, as DFS-based planners tend to be hit-or-miss and restarts increase the number of opportunities for a hit. We do note that approximate loop detection does come at the cost of no longer being able to detect UNPLAN, as we can never guarantee that we explored the full search space. In practice, we do not expect this to matter as the search space of TOHTN problems tends to be too big to feasibly fully explore.
 \begin{comment}
 - false positives mean we loose completeness
 - i.e. if we perform progression search and $p = p_0, \ldots, p_n$ defines a path of search nodes from initial node to goal

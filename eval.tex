@@ -8,12 +8,11 @@ We define the run time of a planner as follows:
 	\item From start until a plan is printed for standalone planners. This includes time spent parsing and grounding
 	\item The wallclock time measured by Mallob for our malleable CrowdHTN, again including parsing
 \end{itemize}
-Planners are scored according to both the IPC score and coverage. The IPC score is defined as 1, if a plan was found in less than 1 second, 0 if no plan was found and for $0 < t < 900$ as
+Planners are scored according to both the IPC score and coverage. The IPC score is defined as 1 if a plan was found in less than 1 second, 0 if no plan was found and for $0 < t < T = 900$ as
 \[
 1 - \frac{log(t)}{log(T)}
 \]
-Our tests were done on two machines. The first is a server with an Intel Xeon Gold 6138 processor with 4 sockets, 20 cores per socket and 2 threads per core clocked 2.00G Hz with around 750GB of RAM and running Ubuntu 20.04. We will call it PC1. The second is a server with an AMD EPYC 7702 processor with 1 socket with 64 cores and 2 threads per core clocked 2.00 GHz with around 1TB of RAM and running Ubuntu 20.04. We will call it PC2. \\
-As for sequential planners, we offer a short comparison with PANDA and HyperTensioN specifically, as those are also search-based planners with overall similar characteristics. 
+Our tests were done on two machines. The first is a server with an Intel Xeon Gold 6138 processor with 4 sockets, 20 cores per socket and 2 threads per core clocked 2.00G Hz with around 750GB of RAM and running Ubuntu 20.04. We will call it PC1. The second is a server with an AMD EPYC 7702 processor with 1 socket with 64 cores and 2 threads per core clocked 2.00 GHz with around 1TB of RAM and running Ubuntu 20.04. We will call it PC2. The numbers shown in tables \ref{table: results old} and \ref{table: results new} were all obtained on PC1.\\
 
 \paragraph{Naming Scheme}
 As our CrowdHTN planner contains multiple configuration options, we use a succinct naming scheme to identify them in the evaluation. The name for a CrowdHTN configuration has the following structure:
@@ -58,27 +57,27 @@ CrowdHTN metadata
 - Ubuntu 20.04
 \end{comment}
 
-\subsection{Comparing to old CrowdHTN}
+\subsection{Comparing New to Old CrowdHTN and Sequential Planners}
 \label{eval: old}
 When comparing our new implementation of CrowdHTN with the old CrowdHTN, we do see an overall higher IPC score while retaining coverage for our best version where all new features are active. However, when comparing old CrowdHTN with the new implementation using hash sets for loop detection, we note a loss in both coverage and IPC score. A plot of their respective performances is shown in figure \ref{figure: eval old new}. \\
-We suspect that the performance degradation comes from our integration into Mallob. CrowdHTN as a work stealing planner sends a high number of messages. As we have seen in the implementation section, to uphold the guarantees of Mallob we do not directly communicate and instead write messages into separate buffers for Mallob to receive and send on which we suspect as one area of lost performance. Additional small overhead may be due to the fact that Mallob performs additional scheduling and rebalancing work in the background, though we expect these effects to be rather small.\\
-However, the improvements we added to CrowdHTN do make up for these losses. Additionally, our new implementation of CrowdHTN generally achieves a higher IPC score per coverage, i.e., if a plan is found it was found fast. If this only happened in badly performing configurations, we would suspect that only easy problems with a high score are solved anymore. However, this correlation holds for all configurations of new CrowdHTN, even those exceeding the old version.
-\begin{figure}
-	\caption{Plotting instances solved per time for old and new CrowdHTN}
+We suspect that the performance degradation comes from our integration into Mallob. CrowdHTN as a work stealing planner sends a high number of messages. As we have seen in the implementation section, to uphold the guarantees of Mallob we do not directly communicate and instead write messages into separate buffers for Mallob to receive and send on which we suspect as one area of lost performance. Additional small overhead may be due to the fact that Mallob performs additional scheduling and rebalancing work in the background.\\
+However, the improvements we added to CrowdHTN do make up for these losses. Additionally, our new implementation of CrowdHTN generally achieves a higher IPC score per coverage, i.e., if a plan is found it is found fast. If this only happened in badly performing configurations, we would suspect that only easy problems with a high score are solved anymore. However, this correlation holds for all configurations of new CrowdHTN, even those exceeding the performance of the old version. \\
+Compared to sequential planners PANDA and HyperTensioN, results are mixed.
+Looking at PANDA, compared to old CrowdHTN we manage to catch up in domains Hiking, Monroe-Fully-Observable and Snake while staying ahead on Blocksworld-HPDDL, Minecraft-Player and Rover-GTOHP. However, overall CrowdHTN still looses out to the more informed PANDA planner. \\
+When looking at HyperTensioN, CrowdHTN retains the advantage of higher coverage as its parallel nature which can be said to correspond to trying the same search multiple times makes it less hit-or-miss than HyperTensioN itself. At the same time, improvements in time to plan mean that CrowdHTN almost catches up to HyperTensioN regarding IPC score.
+\begin{figure}[!hbp]
+	\caption{Instances solved per time for old and new CrowdHTN}
 	\label{figure: eval old new}
 	\centering
 	\includegraphics[width=0.5\textwidth]{images/final/old_new}
 \end{figure}
-Compared to sequential planners PANDA and HyperTensioN, results are mixed.
-Looking at PANDA, compared to old CrowdHTN we manage to catch up in domains Hiking Monroe-Fully-Observable and Snake while staying ahead on Blocksworld-HPDDL, Minecraft-Player and Rover-GTOHP. However, overall CrowdHTN still looses out to the more informed PANDA planner. \\
-When looking at HyperTensioN, CrowdHTN retains the advantage of high coverage as it's distributed nature makes it less hit-or-miss than HyperTensioN itself. At the same time, improvements in time to plan mean that CrowdHTN almost catches up to HyperTensioN regarding IPC score.
 
 \subsection{Optimizations in CrowdHTN}
 \label{eval: crowd optimizations}
-In \ref{impl: reduce nodes} we described an improvement to our progression search which let us reduce the number of search nodes we instantiate. To evaluate the impact of this improvement we created an instrumented version of CrowdHTN which let us track this information during planning. We ran this version of CrowdHTN on our benchmark on PC2, using 1 PE, DFS and hash set based loop detection while giving it 300 seconds per instance. We tracked the metadata for all instances, whether a plan was found or not. In addition to the information on actions and world states, we tracked the number of search nodes which were duplicates. The results are shown in table \ref{table: tohtn metadata}. \\
+In \ref{impl: reduce nodes} we described an improvement to our progression search which let us reduce the number of search nodes and world states we instantiate. To evaluate the impact of this improvement we created an instrumented version of CrowdHTN which let us track this information during planning. We ran this version of CrowdHTN on our benchmark on PC2, using 1 PE, DFS and hash set based loop detection while giving it 300 seconds per instance. We tracked the metadata for all instances, whether a plan was found or not. In addition to the information on actions and world states, we tracked the number of search nodes which were duplicates. The results are shown in table \ref{table: tohtn metadata}. \\
 Compared to the other measures, the ratio of tasks which are actions is relatively consistent between domains. It varies from about one third to about two thirds of all tasks. The ratio is lowest for the Logistics-Learned-ECAI-16 domain at $28.2\%$ and highest for Rover-GTOHP at $66.83\%$. \\
 When it comes to shared world states, results vary more. On 11 out of the 24 test domains, a world state is on average shared by less than 10 search nodes. This is lowest for the Snake domain with only $1.4$ search nodes per world state. On the other hand for 6 out of our 24 domains more than $1000$ search nodes share one world state, going as far as $\sim3.5 \times 10^8$ search nodes per world state for the Transport domain. \\
-To sum these improvements up, our improved search node exploration is a clear benefit on all domains, reducing the number of search nodes we need to represent by at least $28\%$. Sharing world states is more mixed. While sharing is extreme on some domains, it does come at the cost of an additional pointer indirection which may be harmful on domains with little sharing. \\
+To sum these improvements up, our improved search node exploration is a clear benefit on all domains, reducing the number of search nodes we need to represent by at least $28\%$. Sharing world states is more mixed. While sharing is extreme on some domains, it does come at the cost of an additional pointer indirection which may be especially harmful on domains with little sharing as there is no benefit to offset this cost. \\
 Regarding loop detection, the results are similarly varied as with state sharing. On 7 out of 24 domains no duplicate nodes were encountered at all and on another 5 domains less than 1\% of nodes were duplicates. At the other end of the spectrum we have Minecraft-Player and Logistics-Learned-ECAI-16 with $\sim30\%$ and Factories-simple with $\sim44\%$ of duplicate nodes. We will return to these numbers in the evaluation of different loop detection techniques in \ref{eval: loop detection}.
 \begin{table}[!hbp]
 	\caption{Metadata about progression search on our benchmark}
@@ -118,13 +117,13 @@ Regarding loop detection, the results are similarly varied as with state sharing
 
 \subsection{Search Algorithms}
 \label{eval: algorithms}
-In section \ref{improv: search algorithms} we presented four search algorithms that we implemented for CrowdHTN. Those algorithms are random DFS, heuristic DFS, A-star like and BFS. We have tested all four algorithms on our test instance set using 4 PEs and a local bloom filter without restarts for loop detection. The results of this test are visualized in figure \ref{figure: eval algorithm}, a summary of coverage and IPC score is presented in table \ref{table: eval algorithm}. \\
-Overall, random DFS performed best, followed by heuristic DFS, A-star like search and finally BFS with our best algorithm, random DFS, solving almost twice as many instances and having twice the IPC score of our worst algorithm, BFS. Additionally, we observe a hit-or-miss behavior in both our DFS implementations where plans are either found almost immediately or not at all. Out of the 50 instances solved by random DFS, only 18 were solved in more than 1 and out of these 18 only 9 were solved in more than 10 seconds. BFS on the other hand solves 14 out of 30 instances in more than a second and 11 of these 14 in over 10 seconds. As such, while overall worse performing it does seem to scale better with runtime. Overall, BFS seems unsuited for TOHTN planning due to the extremely high branching factor of the problems involved.
+In section \ref{improv: search algorithms} we presented four search algorithms that we implemented for CrowdHTN. Those algorithms are random DFS, heuristic DFS, A*-like and BFS. We have tested all four algorithms on PC1 using our test instance set using 4 PEs and a local bloom filter without restarts for loop detection. The results of this test are visualized in figure \ref{figure: eval algorithm}, a summary of coverage and IPC score is presented in table \ref{table: eval algorithm}. \\
+Overall, random DFS performed best, followed by heuristic DFS, A*-like search and finally BFS. The best performing algorithm, random DFS, solved almost twice as many instances and has twice the IPC score of the worst performing algorithm, BFS. Additionally, we observe a hit-or-miss behavior in both our DFS implementations where plans are either found almost immediately or not at all. Out of the 50 instances solved by random DFS, only 18 were solved in more than 1 and out of these 18 only 9 were solved in more than 10 seconds. BFS on the other hand solves 14 out of 30 instances in more than a second and 11 of these 14 in over 10 seconds. As such, while overall worse performing it does seem to scale better with runtime. Overall, BFS seems unsuited for TOHTN planning due to the extremely high branching factor of the problems involved.
 \\
 Comparing our two DFS-based approaches, we see that random DFS performs better than heuristic DFS guided by our heuristic from section \ref{improv: crowd heuristic}. We attribute this to the fact that we consciously limited our heuristic to information on the hierarchy available from the lifted instance to reduce the time spent on precomputation. Others, such as \cite{holler2020htn} argue that heuristics must utilize both hierarchy and world state information. Our findings corroborate this theory.
 
 \begin{figure}[!hbp]
-	\caption{Plotting the number of solved instances per run time for CrowdHTN using DFS, heuristic DFS, A-star like search and BFS}
+	\caption{Instances solved per time for CrowdHTN using DFS, heuristic DFS, A*-like search and BFS}
 	\label{figure: eval algorithm}
 	\centering
 	\includegraphics[width=0.5\textwidth]{images/final/search_algorithms.png}
@@ -139,7 +138,7 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 		\hline
 		Random DFS 		& 41.7\%	& 43.09 \\ % 50
 		Heuristic DFS 	& 33.3\%	& 35.60	\\ % 40
-		A-star like 	& 38.3\%	& 27.13 \\ % 36
+		A*-like 		& 38.3\%	& 27.13 \\ % 36
 		BFS 			& 25.0\%	& 21.87	\\ % 30
 		\hline
 	\end{tabular}
@@ -150,23 +149,23 @@ Comparing our two DFS-based approaches, we see that random DFS performs better t
 The next feature we tested was the new loop detection based on bloom filters. For our tests we set $k=4$ and limited our false positive probability to $0.001$. The results of this test are shown in figure \ref{figure: eval loop detection}. We see that our bloom filter outperforms the hash set on 32 and 64 PEs, increasing the IPC score by $\sim 5.5$ and coverage by about 6\% when switching from hash set to bloom filter. The gains are so large that 32 PEs using a bloom filter outperform 64 PEs using a hash set. \\
 The gains are strongest on the domain Monroe-Fully-Observable and also visible on Snake.
 However, we also note that our hash set based loop detection achieves good performance on the Logistics-Learned-ECAI-16 domain while no configuration using bloom filters was able to solve a single instance on this domain. A similar but weaker effect happens in Factories-simple.
-Looking at the data in table \ref{table: tohtn metadata} we see that Logistics-Learned-ECAI-16 and Factories-simple are two of the domains with the highest rate of duplicate nodes. We are not sure why Minecraft-Player, the last domain with very high prevalence of duplicate nodes, does not exhibit the same behavior.
+Looking at the data in table \ref{table: tohtn metadata} we see that Logistics-Learned-ECAI-16 and Factories-simple are two of the domains with the highest rate of duplicate nodes. While domains on which hash sets clearly outperform bloom filters all have a very high rate of duplicate nodes, not all domains with many duplicate nodes benefit hash set based loop detection. Minecraft-Player contains almost 30\% duplicate nodes and CrowdHTN performs equal in both modes.
 
 \begin{figure}[!hbp]
-	\caption{Evaluating CrowdHTN with hash set and bloom filter based loop detection}
+	\caption{Instances solved per time with hash set and bloom filter based loop detection}
 	\label{figure: eval loop detection}
 	
 		\centering
 		\includegraphics[width=0.5\textwidth]{images/final/loop_detection}
 \end{figure}
 
-\subsection{Probabilistic Restarts and Global Loop Detection}
+\subsection{Probabilistic Restarts}
 \label{eval: restarts}
 In our next test, we enabled the probabilistic restarts we introduced to guarantee completeness for our bloom filter based loop detection. With runs lasting 900 seconds, we expect $\sum_{t=1}^{899} \frac{1}{t} \approx 7.38$ restarts per run with 5 of these restarts happening within the first 90 seconds. \\
 First, we compare CrowdHTN using local bloom filters with and without restarts. The result is shown in figure \ref{figure: restarts}. Overall, probabilistic restarts seem to have a positive effect on coverage and IPC score which is more pronounced on a lower number of PEs. In this way they somewhat mitigate the hit-or-miss nature of our planner. \\
-While we see a big difference on 32 PEs, there is little difference on 64 PEs where restarts come with a slight benefit to coverage and a little loss in IPC score. We suspect that, while restarts may increase our chances of finding a plan, they do decrease the chance of finding a plan fast, as they interrupt our search and are especially common right at the beginning. Additionally, there is little difference between restarts on 32 and 64 PEs. We will go further into the specific scaling behavior of CrowdHTN in the benchmark on scalability in \ref{eval: scalability}. \\
+While we see a big difference on 32 PEs, there is little difference on 64 PEs where restarts come with a slight benefit to coverage and a small loss in IPC score. We suspect that, while restarts may increase our chances of finding a plan, they do decrease the chance of finding a plan fast, as they interrupt our search and are especially common right at the beginning. Additionally, there is little difference between restarts on 32 and 64 PEs. We will go further into the specific scaling behavior of CrowdHTN in the benchmark on scalability in \ref{eval: scalability}. \\
 \begin{figure}[!hbp]
-	\caption{Evaluating CrowdHTN with a local bloom filter with and without restarts}
+	\caption{Instances solved per time with a local bloom filter with and without restarts}
 	\label{figure: restarts}
 	\centering
 	\includegraphics[width=0.5\textwidth]{images/final/restarts}
@@ -174,10 +173,10 @@ While we see a big difference on 32 PEs, there is little difference on 64 PEs wh
 
 \subsection{Global Loop Detection}
 \label{eval: global loop}
-The last new feature we introduced into CrowdHTN is the ability to perform distributed loop detection and plotted the results in figure \ref{figure: global loops}. Comparing it to CrowdHTN with restarts but no shared information about known search nodes, we get a further small increase in both coverage and IPC score. Among all configurations using bloom filters, CrowdHTN on 64PEs and using global loop detection has the highest coverage and the overall highest IPC score. Similarly, the configuration on 32 PEs is the second best overall, slightly outperforming the 64 PE versions with and without restarts.
+The last new feature we introduced into CrowdHTN is the ability to perform distributed loop detection. A plot of CrowdHTN with distributed loop detection and CrowdHTN using local loop detection with probabilistic restarts is shown in figure \ref{figure: global loops}. With distributed loop detection enabled we get a further small increase in both coverage and IPC score. Among all configurations using bloom filters, CrowdHTN on 64PEs and using global loop detection has the highest coverage and the overall highest IPC score. Similarly, the configuration on 32 PEs is the second best overall, slightly outperforming the 64 PE versions with and without restarts.
 
 \begin{figure}[!hbp]
-	\caption{Comparing CrowdHTN with a local bloom filter and restarts with global loop detection}
+	\caption{Instances solved per time with a local bloom filter and restarts with global loop detection}
 	\label{figure: global loops}
 	\centering
 	\includegraphics[width=0.5\textwidth]{images/final/global_loops}
@@ -192,7 +191,7 @@ To reduce the impact of randomness, we launched on additional test using instanc
 In reality, gains are even higher as these average run times ignore the cases were the 16 PE configuration failed to find a plan at all.
 
 \begin{figure}[!hbp]
-	\caption{Plotting the number of solved instances per run time for CrowdHTN using DFS and a local bloom filter on 64, 16 and 4 PEs}
+	\caption{Instances solved per time for CrowdHTN using DFS and a local bloom filter on 4, 16 and 64 PEs}
 	\label{figure: eval scalability}
 	\centering
 	\includegraphics[width=0.5\textwidth]{images/final/scalability}
@@ -233,7 +232,7 @@ In reality, gains are even higher as these average run times ignore the cases we
 	\end{tabular}
 \end{table}
 \begin{figure}[!hbp]
-	\caption{Distribution of run times on Monroe-Fully-Observable instance 11}
+	\caption{Distribution of solving times on Monroe-Fully-Observable instance 11}
 	\label{figure: eval scalability box}
 	\centering
 	\includegraphics[width=0.5\textwidth]{images/final/scalability_2}
@@ -257,7 +256,8 @@ In reality, gains are even higher as these average run times ignore the cases we
 \label{eval: malleable}
 To test the behavior of CrowdHTN under malleable conditions, we extended our previous test on scalability. We ran another test on Monroe-Fully-Observable instance 11 using 32 PEs. However, every 20 seconds we injected a second unsolvable job with a time limit of 10 seconds. This means that our normal test oscillates between 32 and 16 PEs every 10 seconds, having an average of 24 PEs available. We compare success rate, average time to plan and the overall distribution of run times with moldable CrowdHTN on 24 PEs. The results are listed in table \ref{table: malleability}. Figure \ref{figure: malleability} shows a box plot of run times per solver. \\
 Moldable CrowdHTN on 24 PEs reliably solves this problem in 90 seconds with a success rate of 97\% and an average time to plan of 36.62 seconds. In the ideal case, our malleable CrowdHTN would replicate this behavior. However, we see that malleable CrowdHTN achieves only 69\% success rate with an average time to plan of 31.84 seconds. Looking at the box plot visualizing the distribution of run times, we see that malleable CrowdHTN and moldable CrowdHTN on 24 PEs share the distribution of run times of up to about 50 seconds. Malleable CrowdHTN is missing tail end of the distribution, though, finding no plans beyond the 60 second mark. \\
-We suspect that this behavior is due to the way restarts are implemented in CrowdHTN and with how disappearing workers are handled. As we restart with probability $\frac{1}{t}$ at second $t$, we expect about 5 restarts during a 90 second run with 4 of these restarts taking place in the first 30 seconds. Additionally, we handle disappearing PEs by sending the root of their local search space to a random other PE. As in our experiment half of PEs are lost each time another job is introduced, a high number of those messages may be sent to other disappearing PEs, leading to an unexpectedly high loss of information. Restarts seem to mitigate this at the beginning of the search as they are still frequent.
+We suspect that this behavior is due to the way restarts are implemented in CrowdHTN and with how disappearing workers are handled. As we restart with probability $\frac{1}{t}$ at second $t$, we expect about 5 restarts during a 90 second run with 4 of these restarts taking place in the first 30 seconds. Additionally, we handle disappearing PEs by sending the root of their local search space to a random other PE. As in our experiment half of PEs are lost each time another job is introduced, a high number of those messages may be sent to other disappearing PEs, leading to an unexpectedly high loss of information. Restarts seem to mitigate this at the beginning of the search as they are still frequent. \\
+Overall, while loosing performance we still managed to solve a large share of instances.
 \begin{figure}[!hbp]
 	\caption{Distribution of solving times for malleable and moldable CrowdHTN}
 	\label{figure: malleability}

@@ -1,10 +1,10 @@
-\subsection{TOHTN Formalism}
+\subsection{(TO)HTN Formalism}
 \label{prelim: formalism}
 In this section we first define what HTN and TOHTN problems are from a formal perspective \ref{prelim: tohtn problems}. Afterwards we take a short look at the algorithmic worst case complexity of HTN and TOHTN planning \ref{prelim: tohtn complexity}. We conclude by taking a short look at how hierarchical and classical planning compare in \ref{prelim: planning differences} and present the way in which we visualize hierarchical problems in this work in \ref{prelim: graphic tohtn}.
 
-\subsubsection{Defining TOHTN Planning Problems}
+\subsubsection{Defining (TO)HTN Planning Problems}
 \label{prelim: tohtn problems}
-Both HTN and TOHTN planning are based of decomposing a list of initial tasks down into smaller subtasks until those subtasks can be achieved by simple actions. A number of formalisms for HTN plannings exist \cite{georgievski2015htn, behnke2018tracking, schreiber2021lilotane}. These formalisms are similar but differ slightly to suit specific planning approaches. In this work, we will reuse the formalism we introduced in \cite{bretl2021parallel} which is built on the definition by \cite{georgievski2015htn}.
+Both HTN and TOHTN planning are based on decomposing a list of initial tasks down into smaller subtasks until those subtasks can be achieved by simple actions. A number of formalisms for HTN plannings exist \cite{georgievski2015htn, behnke2018tracking, schreiber2021lilotane}. These formalisms are similar but differ slightly to suit specific planning approaches. In this work, we will reuse the formalism we introduced in \cite{bretl2021parallel} which is built on the definition by \cite{georgievski2015htn}.
 
 \begin{definition} % predicate
 	A \textbf{predicate} consists of two parts. Firstly a predicate symbol $p \in \mathcal{P}$ where $\mathcal{P}$ is the finite set of predicate symbols. Secondly of a list of terms $\tau_1, \ldots, \tau_k$ where each term $\tau_i$ is either a constant symbol $c \in \mathcal{C}$, with $\mathcal{C}$ being the finite set of constant symbols, or a variable symbol $v \in \mathcal{V}$, where $\mathcal{V}$ is the infinite set of variable symbols. \\
@@ -43,12 +43,12 @@ Primitive and compound tasks together form task networks. In places where both c
 	In TOHTN planning, $constraints(m)$ is implicitly set s.t. the subtasks $t_1, \ldots, t_l$ are totally ordered. \\
 	We call a fully ground method a \textbf{reduction}.
 \end{definition}
-Each method $m$ has exactly one associated compound task $t_c$. However, multiple methods $m_1, \ldots, m_k$ may be associated with a single compound task $t_c$. Additionally, while any arguments of $t_c$ must be present in $m$, the contrary is not true and $m$ may have arguments not present in $t_c$, i.e., $m$ is not fully determined by $t_c$. As a result methods present choice points both in the choice of method itself as well as through the argument instantiation. \\
+Each method $m$ has exactly one associated compound task $t_c$. However, multiple methods $m_1, \ldots, m_k$ may be associated with a single compound task $t_c$. Additionally, while any arguments of $t_c$ must be present in $m$, the contrary is not true and $m$ may have arguments not present in $t_c$, i.e., $m$ is not fully determined by $t_c$. As a result, methods represent choice points both in the choice of method itself as well as through the argument instantiation. \\
 
 
 \begin{definition} % resolving a compound task
 	Let $\tau = (T, \psi)$ be a task network, $s$ a state, $m = (\Tilde(m)(a_1, \ldots, a_k), t_c, pre(m),$\\$ subtasks(m), constraints(m))$ be a method. $m$ \textbf{resolves} $\tau$ iff $t_c \in T$, the constraints in $\psi$ allow for $t_c$ to be resolved, $pre^+(m) \in s$ and $pre^-(m) \cap s = \emptyset$. \\
-	Resolving a compound task $t \in T$ results in a new task network $\tau' = ((T \setminus t) \cup \{t : t \in subtasks(m)\}, \psi \cup constraints(m))$ and state $s$. \\
+	Resolving a compound task $t \in T$ results in a new task network $\tau' = ((T \setminus t) \cup \{t : t \in subtasks(m)\}, \psi \cup constraints(m))$ and unchanged state $s$. \\
 	Applying a primitive task results in a new task network $\tau' = (T \setminus t, \psi)$ in state $s'$ where the effects of $t$ have been applied to $s$. 
 \end{definition}
 
@@ -56,7 +56,6 @@ Each method $m$ has exactly one associated compound task $t_c$. However, multipl
 	An \textbf{HTN domain} is a tuple $D = (V, C, P, T, M)$ consisting of finite sets variables $V$, constants $C$, predicates $P$, tasks $T$ and methods $M$. An \textbf{HTN problem} $\Pi = (D, s_0, \tau_0)$ consists of a domain $D$, an initial state $s_0$ and an initial task network $\tau_0$. \\
 	If $subtasks(m)$ has a total order for all $m \in M$ and the tasks in $\tau_0$ are totally ordered, we speak of a \textbf{TOHTN domain} and \textbf{TOHTN problem}.
 \end{definition}
-It is possible to translate any HTN problem with initial task network $\tau_0$ into an equivalent HTN problem with initial task network $\tau'_0$ s.t. $\tau'_0$ consists of only a single task. \\
 It is possible to simplify the model s.t. $\tau_0$ always consists of only a single task with no constraints. We do this by inserting a new initial task $t_0$ and method $m_0$ with no arguments s.t. resolving $t_0$ via $m_0$ results in $\tau_0$. \\
 Another way of viewing HTN problems is as AND/OR trees \cite{holler2021landmark} where tasks form OR-nodes where one of may methods is chosen and methods form AND-nodes, as all subtasks need to be resolved.
 
@@ -95,12 +94,12 @@ both: context-free grammars can be simulated by HTN, use primitive tasks as term
 \label{prelim: planning differences}
 \cite{nau2007current} creates a classification of planners into domain-specific, domain-independent and domain-configurable planners.
 They argue that HTN planning falls under domain-configurable with the decompositions providing advice to the planner to gain efficiency.
-\cite{holler2020htn} argue that HTN-planning is not simply a domain-configurable version of classical planning and argue on the basis that \cite{erol1994htn, erol1996complexity} showed that HTN-planning is strictly more powerful compared to classical planning which is PSPACE-complete. \\
+\cite{holler2020htn} argue that HTN-planning is not simply a domain-configurable version of classical planning on the basis that \cite{erol1994htn, erol1996complexity} showed that HTN-planning is strictly more powerful compared to classical planning which is PSPACE-complete. \\
 While we agree with \cite{holler2020htn}, one can still use HTN planning without using the full complexity of the model, using it instead to provide more efficient and guided versions of classical planning problems.
 
 \subsubsection{Graphically Representing TOHTN Problems}
 \label{prelim: graphic tohtn}
-In the rest of this work we will sometimes represent the structure of TOHTN domains graphically. We will always use the same scheme which we explain here. In our visualization, we present the structure of a domain as a series of methods. To the left we show the compound task which can be resolved by the method, followed by the method itself on its right and followed again by the method subtasks in their fixed order. Compound tasks are always represented by green rounded squares and their name, methods by an arrow with the method name above and actions by blue rounded squares and their name.\\
+In the rest of this work we will sometimes represent the structure of TOHTN domains graphically. We will always use the same scheme which we explain here. In our visualization, we represent the structure of a domain as a series of methods. To the left we show the compound task, followed by the method itself on its right and followed again by the method subtasks in their fixed order. Compound tasks are always represented by green rounded squares and their name, methods by an arrow with the method name above and actions by blue rounded squares and their name.\\
 A short example is shown in figure \ref{figure: prelim tohtn example}. It consists of one method, $m_1$ which resolves task $t_1$. The subtasks of $m_1$ are $t_2$, $a_1$ and $a_2$. $t_1$ and $t_2$ are compound tasks, $a_1$ and $a_2$ are actions.
 \begin{figure}
 	\caption{An example TOHTN domain}

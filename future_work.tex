@@ -38,7 +38,7 @@ Better informed heuristics to determine when a node is likely interesting for ot
 
 \paragraph{Intelligent restarts}
 In both \ref{ld - completeness} and \ref{improv: completeness} we argue for the use of probabilistic restarts to guarantee the completeness of CrowdHTN. We perform restarts with probability $\frac{1}{t}$ at second $t$. This is only one of the possible ways to use restarts. \\
-At the same time, restarts and restarting strategies to increase solver performance have played a role in SAT solving since the 1990s.
+Restarts and restarting strategies to increase solver performance have played a role in SAT solving since the 1990s.
 \cite{langley1992systematic} suggested the use of iterative sampling in AI planning systems, repeatedly exploring random paths up to a depth limit and restarting if no solution was found. 
 Their work was adapted by \cite{crawford1994experimental} who employed the iterative sampling strategy for SAT solving. As a general restart strategy for increased performance, the Luby sequence was developed \cite{luby1993optimal} and has by now been adapted by SAT solvers \cite{huang2007effect}. By now a wide array of different restart strategies have been tried in SAT solvers. There are both static restart strategies, such as uniform intervals and based Luby schemes and dynamic strategies which incorporate run time information into their decision \cite{biere2015evaluating}. \\
 We are eager to see how incorporating such restart schemes may affect the performance of hierarchical planners.
@@ -65,4 +65,4 @@ In SAT solving, restarts have long been an important part of solvers to increase
 \end{comment}
 
 \paragraph{Malleable communication schemes}
-As we have seen in our evaluation, our malleable TOHTN planner struggles with the frequent reshuffling of PEs. This could be addressed either by changing Mallob s.t. message loss can be avoided completely or by designing new communication schemes that ensure no information is lost. This may be done by limiting communication to the binary tree in which Mallob organizes the worker of a job and having parents guarantee that no information of their children is lost. Additional work would be needed to ensure that the guarantees of randomized work stealing still hold up in such an environment.
+As we have seen in our evaluation, our malleable TOHTN planner struggles with the frequent reshuffling of PEs. This could be addressed either by changing Mallob s.t. message loss can be avoided completely or by designing new communication schemes that ensure no information is lost. This may be done by limiting communication to use the edges of the binary tree in which Mallob organizes the worker of a job and having parents guarantee that no information of their children is lost. Additional work would be needed to ensure that the guarantees of randomized work stealing still hold up in such an environment.

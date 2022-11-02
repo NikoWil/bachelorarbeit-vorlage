@@ -150,7 +150,7 @@
 
     \vspace*{15mm}
 
-    Date of submission: \today
+    Date of submission: November 1, 2022
 
     \vspace*{45mm}
 
@@ -186,7 +186,7 @@ Hiermit versichere ich, dass ich diese Arbeit selbständig verfasst und keine an
 \bigskip
 
 \noindent
-Karlsruhe, den \today
+Karlsruhe, den 01. November 2022
 
 % Unterschrift (handgeschrieben)
 
@@ -201,9 +201,8 @@ Karlsruhe, den \today
 \selectlanguage{german}
 \begin{abstract}
 \centerline{\bf Zusammenfassung}
-
-Totally Ordered Hierarchical Task Network (TOHTN) planning ist ein Teilgebiet der künstlichen Intelligenz und gehört zum weiteren Bereich des domänenunabhängigen Planens. Beim TOHTN planning werden offene Tasks rekursiv aufgelöst und verfeinert bis wir einen ausführbaren Plan aus primitiven Aktionen erhalten. TOHTN planning ist von hoher Komplexität gekennzeichnet und gehört zur Klasse der Probleme in D-EXPTIME und ist EXPSPACE-hart. \\
-Malleability bezeichnet die Fähigkeit eines Programms, zur mit einer sich verändernden Menge verfügbarer Ressourcen zurecht zu kommen. Sie erlaubt den effizienten Einsatz von Ressourcen, da sie erlaubt Ressourcen zu jedem Zeitpunkt vollständig zu nutzen anstatt einen Kompromiss aus Durchsatz und Latenz anstreben zu müssen. Programme zu schreiben die dies erfüllen ist jedoch eine Herausforderung, weswegen es nur wenige Beispiele gibt. \\
+Totally Ordered Hierarchical Task Network (TOHTN) planning ist ein Teilgebiet der künstlichen Intelligenz und gehört zum  Bereich des domänenunabhängigen Planens. Beim TOHTN planning werden offene Tasks rekursiv aufgelöst und verfeinert bis wir einen ausführbaren Plan aus primitiven Aktionen erhalten. TOHTN planning ist von hoher Komplexität gekennzeichnet. Es gehört zur Komplexitätsklasse D-EXPTIME und ist EXPSPACE-hart. \\
+Malleability bezeichnet die Fähigkeit eines Programms, mit einer sich verändernden Menge zugewiesener Ressourcen zurecht zu kommen. Sie erlaubt den effizienten Einsatz von Ressourcen, da sie erlaubt Ressourcen zu jedem Zeitpunkt vollständig zu nutzen anstatt einen Kompromiss aus Durchsatz und Latenz anstreben zu müssen. Programme zu schreiben die dies erfüllen ist jedoch eine Herausforderung, weswegen es nur wenige Beispiele gibt. \\
 Um die Möglichkeiten des parallelen Planens auszuloten und zudem die Möglichkeiten des Load Balancers und Schedulers Mallob aufzuzeigen haben wir unseren parallelen Planner CrowdHTN in Mallob integriert. Zudem haben wir die Performance von CrowdHTN mithilfe eines verteilten Schemas zur Schleifenerkennung basierend auf Bloom Filtern verbessert und Neustarts genutzt, um die Vollständigkeit unseres Algorithmus' zu garantieren. \\
 In unserer Evaluation zeigen wir, dass sowohl die verteilte Schleifenerkennung als auch die Neustarts die Performanz und die Menge gelöster Instanzen erhöhen. Zudem zeigen wir, dass wir auch in einem veränderlichen Umfeld die Fähigkeit beibehalten, Instanzen zu lösen.
 
@@ -214,8 +213,8 @@ In unserer Evaluation zeigen wir, dass sowohl die verteilte Schleifenerkennung a
 \selectlanguage{english}
 \begin{abstract}
 \centerline{\bf Abstract}
-Totally Ordered Hierarchical Task Network (TOHTN) planning is a sub-field of artificial intelligence and belongs to the area of domain-independent planning. In TOHTN planning we recursively resolve open tasks, refining them, until we obtain an executable plan consisting of primitive actions. TOHTN planning is computationally and it belongs to the class of D-EXPTIME while being EXPSPACE-hard. \\
-Malleability is the ability of a program to handle a changing amount of assigned resources at run time. It allows for a more efficient use of resources as it frees schedulers to utilize all resources at all times instead of finding a compromise between throughput and latency. At the same time, it is a challenge to implementers and few malleable programs exist. \\
+Totally Ordered Hierarchical Task Network (TOHTN) planning is a sub-field of artificial intelligence and belongs to the area of domain-independent planning. In TOHTN planning we recursively resolve open tasks, refining them, until we obtain an executable plan consisting of primitive actions. TOHTN planning is computationally intensive and it belongs to the class of D-EXPTIME while being EXPSPACE-hard. \\
+Malleability is the ability of a program to handle a changing amount of assigned resources at run time. It allows for a more efficient use of resources as it frees schedulers to utilize all resources at all times instead of striking a compromise between throughput and latency. At the same time, it is a challenge to implementers and few malleable programs exist. \\
 To further explore parallel TOHTN planning and to demonstrate the capabilities of malleable scheduler and load balancer Mallob we perform an integration of our parallel planner CrowdHTN with the aforementioned Mallob. Additionally, to increase the performance of CrowdHTN, we introduce a new distributed loop detection scheme based on bloom filters and utilizing restarts for correctness. \\
 In our evaluation we find that both distributed loop detection and restarts positively impact performance and coverage of our planner while showing that we retain the capability to solve problems in a malleable environment. \\
 
@@ -293,25 +292,25 @@ While popular with users, HTN planning does present challenges for implementers 
 - hierarchical problems can be recursive which makes the detection of duplicate states important
 \end{comment}
 
-Malleability is the ability of a parallel job to efficiently integrate new PEs into a parallel job at run time as well as handle a reduction of the available PEs \cite{feitelson1997job}. Malleable programs are well-liked by administrators of supercomputers, as they allow the utilization of all compute resources, maintaining both high throughput and keeping latencies for new jobs low \cite{feitelson1997job, hungershofer2004combined}. The malleable model does pose additional challenges for application programmers, though and malleable jobs are only easy to implement if we restrict our problems to those which split into small, independent work packages \cite{feitelson1997job, tucker1989process} and few malleable applications exist. 
+Malleability is the ability of a parallel job to efficiently integrate new processing elements (PEs) into a parallel job at run time as well as handle a reduction of the available PEs \cite{feitelson1997job}. Malleable programs are well-liked by administrators of supercomputers, as they allow the utilization of all compute resources, maintaining both high throughput and keeping latencies for new jobs low \cite{feitelson1997job, hungershofer2004combined}. The malleable model does pose additional challenges for application programmers, though, and malleable jobs are only easy to implement if we restrict our problems to those which split into small, independent work packages \cite{feitelson1997job, tucker1989process}. As a result, few malleable applications exist. \\
 However, in recent years a number of malleable SAT solvers have emerged. Among those Mallob \cite{sanders2022decentralized} and Paracooba \cite{heisinger2020distributed}. This is of special importance as SAT solvers serve as a building block in many other applications such as hierarchical planning. Having malleable SAT solvers available may allow for other applications to profit from this paradigm while being presented a simple to use interface. \\
 
 In this thesis, we present three main advances in parallel and malleable TOHTN planning. \\
 Firstly, we present a number of improvements for the parallel search-based planner CrowdHTN.
-Both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} have shown the importance of detecting duplicate search nodes to improve the performance of hierarchical planners. PANDA specifically uses an approach based on hashing which may fall back to full node comparisons to avoid false positives. Parallel planner CrowdHTN already includes a loop detection mechanism based on the ideas of PANDA \cite{bretl2021parallel}. We take the idea of PANDA to only compare hashes and not full nodes and generalize it to bloom filters which may use any number $k$ of hash functions to reduce false positive rates. Bloom filters then allow us to present a design for a distributed loop detection mechanism. Additionally, PANDA has shown that heuristics can greatly increase the performance of search-based planner \cite{holler2020htn}. We try to adapt heuristic search for CrowdHTN while under the added constraints of malleability. Doing so, we implement BFS, heuristic DFS and A-star in CrowdHTN.
+Both HyperTensioN \cite{magnaguagno2020hypertension} and PANDA \cite{holler2021loop} have shown the importance of detecting duplicate search nodes to improve the performance of hierarchical planners. PANDA specifically uses an approach based on hashing which may fall back to full node comparisons to avoid false positives. Parallel planner CrowdHTN already includes a loop detection mechanism based on the ideas of PANDA \cite{bretl2021parallel}. We take the idea of PANDA to only compare hashes and not full nodes and generalize it to bloom filters which may use any number $k$ of hash functions to reduce false positive rates. Bloom filters then allow us to present a design for a distributed loop detection mechanism. Additionally, PANDA has shown that heuristics can greatly increase the performance of search-based planner \cite{holler2020htn}. We try to adapt heuristic search for CrowdHTN while under the added constraints of malleability. Doing so, we implement BFS, heuristic DFS and A* in CrowdHTN.
 Last, we take inspiration from SAT where restarts have been used since the 90's \cite{crawford1994experimental} to design a restarting scheme for CrowdHTN which allows it to be complete even as bloom filter based detection of duplicate nodes may lead to false positives. \\
-Second, we provide a general overview of the completeness of different TOHTN planning approaches. We show that both search-based planners using BFS, A-star and current SAT-based planners are complete. In addition we argue that heuristic best-first search may always be incomplete and that, while current loop detection mechanisms are helpful for planner performance, there are cases of recursion in hierarchical planning problems which they are unable to detect. Lastly, we show that our restart mechanism brings random DFS into the list of algorithms which are complete on all problems. \\
+Second, we provide a general overview of the completeness of different TOHTN planning approaches. We show that both search-based planners using BFS, A* and current SAT-based planners are complete. In addition we argue that heuristic best-first search may always be incomplete and that, while current loop detection mechanisms are helpful for planner performance, there are cases of recursion in hierarchical planning problems which they are unable to detect. Lastly, we show that our restart mechanism brings random DFS into the list of algorithms which are complete on all problems. \\
 Third, we present our design of a malleable TOHTN planner. In this we integrate our planner CrowdHTN with the malleable job scheduler Mallob. We offer an overview of our design and show how work stealing in general can be adapted to a malleable framework while preserving completeness of the search. Doing so we also show Mallob's capabilities as a general purpose job scheduler and load balancer.\\
-In our evaluation we find that our implementation suffers from some overhead due to the integration into the Mallob scheduler.
+In our evaluation we find that our implementation suffers from some overhead due to the integration into Mallob.
 However, we also see that bloom filters in general outperform hash sets when it comes to detecting duplicate states in TOHTN planning and that this performance gain extends to our distributed loop detection scheme. We further find that restarts not only serve to ensure the completeness of our planner while using bloom filters but have an additional positive impact on overall performance. Regarding malleability, we see that our proposed malleable work stealing scheme can suffer from some loss of performance when a large number of PEs is frequently reshuffled but that this can be mitigated with frequent restarts. \\
 
-The rest of this work follows the following structure: in section \ref{prelim} we introduce a TOHTN planning formalism as well as planning techniques, followed by an intro to malleability and an overview of parallel and distributed computing techniques that inform the design of CrowdHTN. It ends with a short introduction to CrowdHTN and Mallob. Section \ref{improv} presents us two potential theoretical improvements to CrowdHTN and the design of a distributed loop detection scheme. In section \ref{improv: completeness} we show how current loop detection schemes are unequipped to ensure completeness of hierarchical planners and argue for the use of restarts as an alternative technique. Section \ref{malleable: overview} presents our design of a malleable parallel TOHTN planner based on work stealing. This is followed by section \ref{impl} which contains implementation details of both our improvements and the malleable design. Finally, section \ref{eval} evaluates and compares our planner to it's old standalone version, presents the performance impact of our various improvements and provides an overview of the behavior of CrowdHTN as the number of PEs scales as well as under malleable conditions. Section \ref{conclusion} concludes this work.
+The rest of this work follows the following structure: in section \ref{prelim} we introduce a TOHTN planning formalism as well as planning techniques, followed by an intro to malleability and an overview of parallel and distributed computing techniques that inform the design of CrowdHTN. It ends with a short introduction to CrowdHTN and Mallob. Section \ref{improv} presents us two potential theoretical improvements to CrowdHTN and the design of a distributed loop detection scheme. It concludes with us showing how current loop detection schemes are unequipped to ensure completeness of hierarchical planners and argue for the use of restarts as an alternative technique. Section \ref{malleable: overview} presents our design of a malleable parallel TOHTN planner based on work stealing. This is followed by section \ref{impl} which contains implementation details of both our improvements and the malleable design. Finally, section \ref{eval} evaluates and compares our planner to it's old standalone version, presents the performance impact of our various improvements and provides an overview of the behavior of CrowdHTN as the number of PEs scales as well as under malleable conditions. Section \ref{conclusion} concludes this work.
 	
 \clearpage
 \pagebreak
 \section{Preliminaries}
 \label{prelim}
-This section we introduce the TOHTN formalism and discuss it's complexity and differences to classical planning in \ref{prelim: formalism}. This is followed by an overview and comparison of TOHTN planning techniques in \ref{prelim: techniques}, and a classification of parallel programs and discussion of malleability in \ref{prelim: malleability}. In \ref{prelim: parallel distributed} we introduce the parallel techniques underlying our planner. We conclude by introducing our parallel planner CrowdHTN in \ref{prelim: crowdhtn} and the malleable load balancer and scheduler Mallob in \ref{prelim: mallob}.
+In this section we introduce the TOHTN formalism and discuss its complexity and differences to classical planning in \ref{prelim: formalism}. This is followed by an overview and comparison of TOHTN planning techniques in \ref{prelim: techniques}, and a classification of parallel programs and discussion of malleability in \ref{prelim: malleability}. In \ref{prelim: parallel distributed} we introduce the parallel techniques underlying our planner. We conclude by introducing our parallel planner CrowdHTN in \ref{prelim: crowdhtn} and the malleable load balancer and scheduler Mallob in \ref{prelim: mallob}.
 \input{prelim_tohtn_formalism}
 \input{prelim_tohtn_techniques}
 \input{prelim_malleability}
@@ -323,12 +322,12 @@ This section we introduce the TOHTN formalism and discuss it's complexity and di
 \pagebreak
 \section{Theoretical Improvements of the CrowdHTN Planner}
 \label{improv}
-In this section we will introduce two improvements to CrowdHTN. First we changed the underlying implementation of our planner, which allows us to easily switch out the search algorithm we use. We introduce them in \ref{improv: search algorithms} and discuss their expected performance characteristics. Afterwards we start a discussion about loop detection in TOHTN planning, the data structures which may help us and how we design our new distributed loop detection scheme in \ref{improv: loop detection}.
+In this section we will introduce two improvements to CrowdHTN. First we changed the underlying implementation of our planner, which allows us to easily switch out the search algorithm we use. We introduce four search algorithms in \ref{improv: search algorithms} and discuss their expected performance characteristics. Afterwards we start a discussion about loop detection in TOHTN planning, the data structures which may help us and how we design our new distributed loop detection scheme in \ref{improv: loop detection}. We conclude with an extended discussion on planner completeness in \ref{improv: completeness}, taking search algorithms, loop detection and restarts into account.
 \input{improv_search_algorithms}
 \input{improv_loop_detection}
-\clearpage
-\pagebreak
-\section{Completeness of HTN Planning Algorithms}
+
+
+\subsection{Discussion of Planner Completeness}
 \label{improv: completeness}
 \input{improv_planner_completeness}
 \clearpage
@@ -348,7 +347,7 @@ In this section we will give an overview of the implementation work we performed
 \section{Experimental Evaluation}
 \label{eval}
 In this section we will perform an evaluation of our new CrowdHTN implementation as it is integrated into Mallob, the new features we added into CrowdHTN and how it behaves in a malleable environment. \\
-We start out by presenting our experimental setup in \ref{eval: setup}, including the naming scheme we use to identify different versions and configurations of CrowdHTN. After, we first offer an overview of the performance of CrowdHTN as a standalone program and improved CrowdHTN integrated into Mallob.
+We start out by presenting our experimental setup in \ref{eval: setup}, including the naming scheme we use to identify different versions and configurations of CrowdHTN. After, we first offer a comparison of the performance of CrowdHTN as a standalone program and improved CrowdHTN integrated into Mallob. A short comparison of CrowdHTN with state of the art sequential search-based planners is also included. \\
 This is followed by more detailed discussions of the different improvements and features we added. We will review the effect of the improvements on the implementation level and discuss the behavior of different search algorithms in CrowdHTN. Then we see how the performance changes as we enable bloom filters for loop detection, probabilistic restarts and distributed loop detection one after the other. We conclude with a discussion on the scaling behavior and the performance of CrowdHTN in a malleable environment, followed by an overall recap. \\
 The overall results can also be seen in tables \ref{table: results old} for the sequential planners and standalone CrowdHTN and \ref{table: results new} for CrowdHTN integrated into Mallob.
 \input{eval}

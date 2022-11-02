@@ -1,8 +1,8 @@
-In section \ref{improv: search algorithms} on different search algorithms we already did a short discussion on the completeness of different algorithms. The current section will start with a short recap of our findings, expand them to other planners and will then do an expanded discussion that takes factors like loop detection and restarts into account. \\
+In section \ref{improv: search algorithms} we already did a short discussion on the impact of different search algorithms on the overall completeness of progression search. The current section will start with a short recap of our findings, expand them to other planners and will then do an expanded discussion that takes factors like loop detection and restarts into account. \\
 Before we dive into the more detailed discussion we want to note that we have seen in section \ref{prelim: tohtn complexity} that there is an upper bound to task network depth where, if a plan exists at all, it can be found before that depth. By limiting our planning to task network expansions with lower depth, we can trivially achieve completeness. This is however of little practical use as this depth bound is exponential in the problem size. As a result, we can expect to run out of memory before hitting this bound. For this reason we do not make use of this bound and as far as we know no other planner does. We will now resume a more practical discussion of planner completeness.\\ 
 As previously noted, we can split our search algorithms into three main groups:
 \begin{itemize}
-	\item Algorithms that are complete (BFS, A-star like search)
+	\item Algorithms that are complete (BFS, A*-like search)
 	\item Algorithms with a chance but no guarantee to find a plan (DFS)
 	\item Algorithms which for some domains will never find a plan (heuristic DFS with pathological cases)
 \end{itemize}
